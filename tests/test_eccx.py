@@ -5030,3 +5030,89 @@ class TestCorpusReport(unittest.TestCase):
                            capture_output=True, text=True, cwd=ROOT)
         self.assertEqual(r.returncode, 2)
         self.assertIn("nexistepas", r.stderr)
+
+
+class TestGrepBaseline(unittest.TestCase):
+    """The baseline that decides whether the router deserves to exist.
+
+    A router compared against "nothing" always wins. These tests pin the three
+    ways a baseline silently becomes a straw man: it searches a smaller file set
+    than the indexer, it carries the query's function words so every document
+    scores something, and it is compared against a run of different queries.
+    """
+
+    def setUp(self):
+        import tempfile
+        self.dir = Path(tempfile.mkdtemp())
+        root = self.dir / "notes"
+        root.mkdir()
+        (root / "vpn.md").write_text("# VPN\n\nLe tunnel tombe chaque nuit.\n")
+        # .txt is indexed by the product, so the baseline must read it too. The
+        # first version globbed "*.md" and quietly lost six real documents.
+        (root / "audit.txt").write_text("Licence payante detectee dans le tunnel.\n")
+        self.root = root
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def _run(self, *args):
+        import subprocess
+        import sys as _sys
+        return subprocess.run([_sys.executable, str(ROOT / "tools" / "grep_baseline.py"),
+                               "--corpus", str(self.root), *args],
+                              capture_output=True, text=True, cwd=ROOT)
+
+    def test_the_baseline_reads_the_same_suffixes_as_the_indexer(self):
+        from tools.grep_baseline import load_corpus
+        docs = load_corpus(self.root)
+        self.assertEqual(set(docs), {"vpn", "audit"})
+
+    def test_suffixes_come_from_the_indexer_not_a_copy(self):
+        from eccxlib import corpus
+        from tools import grep_baseline
+        import inspect
+        src = inspect.getsource(grep_baseline.load_corpus)
+        self.assertIn("SUFFIXES", src)
+        self.assertIn(".txt", corpus.SUFFIXES)
+
+    def test_function_words_do_not_score(self):
+        """A query of pure function words must find nothing; otherwise every
+        document ties and the baseline's @1 is decided by alphabetical order."""
+        from tools.grep_baseline import rank_grep
+        self.assertEqual(rank_grep({"a": "le la les de", }, "le la les de", 5), [])
+        self.assertEqual(rank_grep({"a": "tunnel"}, "où est le tunnel ?", 5), ["a"])
+
+    def test_ranking_is_deterministic_on_ties(self):
+        from tools.grep_baseline import rank_grep
+        docs = {"z": "tunnel", "b": "tunnel", "m": "tunnel"}
+        self.assertEqual(rank_grep(docs, "tunnel", 3), ["b", "m", "z"])
+        self.assertEqual(rank_grep(docs, "", 3), [])
+
+    def test_a_mispaired_comparison_is_refused(self):
+        """Comparing ranks from different query sets is the classic way to
+        manufacture a win; the tool must refuse rather than print a p-value."""
+        q = self.dir / "q.jsonl"
+        q.write_text(json.dumps({"q": "le tunnel", "expect": ["vpn"]}) + "\n")
+        ranks = self.dir / "ranks.json"
+        ranks.write_text(json.dumps({"lexical": [{"q": "une autre question",
+                                                  "rank": 1}]}))
+        r = self._run("--queries", str(q), "--against", str(ranks))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("désappariées", r.stdout)
+        self.assertNotIn("routeur gagne", r.stdout)
+
+    def test_paired_run_reports_a_verdict_for_matching_queries(self):
+        q = self.dir / "q.jsonl"
+        # grep finds vpn at rank 1 ("tunnel tombe" scores 2 there, 1 in audit);
+        # the router missed it entirely. Counts must say 0 wins, 1 loss — the
+        # verdict stays "indistinguable" because one discordant pair proves
+        # nothing, and the test asserts the counts rather than the prose.
+        q.write_text(json.dumps({"q": "tunnel tombe", "expect": ["vpn"]}) + "\n")
+        ranks = self.dir / "ranks.json"
+        ranks.write_text(json.dumps({"lexical": [{"q": "tunnel tombe", "rank": None}]}))
+        r = self._run("--queries", str(q), "--against", str(ranks))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("routeur mieux", r.stdout)
+        self.assertIn("@1 | 0 | 1 |", r.stdout)
+        self.assertIn("indistinguable", r.stdout)

@@ -149,6 +149,9 @@ def main() -> int:
     ap.add_argument("--queries", required=True, help="jsonl: {q, expect:[ids]}")
     ap.add_argument("--k", type=int, default=20)
     ap.add_argument("--out", default=None, help="markdown report path")
+    ap.add_argument("--json", default=None, dest="json_out",
+                    help="dump per-query ranks per arm, for a paired comparison "
+                         "against an outside baseline (see tools/grep_baseline.py)")
     a = ap.parse_args()
 
     corpus_dir = Path(a.corpus).expanduser().resolve()
@@ -165,6 +168,11 @@ def main() -> int:
 
     arms, elapsed = run_arms(idx, queries, a.k)
     md = report(idx, queries, arms, elapsed)
+    if a.json_out:
+        Path(a.json_out).write_text(json.dumps(
+            {name: [{"q": r["q"], "rank": r["rank"]} for r in rows]
+             for name, rows in arms.items()}, ensure_ascii=False, indent=1))
+        print(f"rangs par requête: {a.json_out}")
     if a.out:
         Path(a.out).write_text(md)
         print(f"rapport: {a.out}")

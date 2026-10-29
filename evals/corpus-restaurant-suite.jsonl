@@ -1,0 +1,60 @@
+{"q": "je veux relancer le projet, où en est-on exactement aujourd'hui ?", "expect": ["README", "docs/developer-log", "decisions/0001-project-status"]}
+{"q": "qu'est-ce qui doit être absolument terminé avant de commencer la V0.1 ?", "expect": ["docs/architecture/ameliorations-cdc-priorisees", "docs/cdc/restaurant-suite-cdc-v3/phases/00-phase-0.0-contrats"]}
+{"q": "c'est quoi le contrat de données de la phase zéro ?", "expect": ["docs/architecture/data-contract"]}
+{"q": "comment sont nommés les événements javascript envoyés par le menu ?", "expect": ["docs/architecture/events-contract"]}
+{"q": "quels hooks sont prévus pour que le thème puisse se brancher ?", "expect": ["docs/architecture/hooks-contract"]}
+{"q": "comment éviter qu'une commande whatsapp soit envoyée deux fois si le client appuie deux fois", "expect": ["docs/architecture/idempotency-contract", "docs/cdc/restaurant-suite-cdc-v3/phases/04-v0.4-whatsapp-regles"]}
+{"q": "quels sont les statuts d'une commande et qui peut les changer", "expect": ["docs/architecture/order-status-contract", "docs/architecture/permissions-matrix"]}
+{"q": "quelle est la matrice des permissions entre le gérant et le serveur", "expect": ["docs/architecture/permissions-matrix"]}
+{"q": "qu'est-ce qu'il faut fournir comme preuves pour valider la phase 0.0", "expect": ["docs/architecture/phase-0.0-gate"]}
+{"q": "la revue senior du cahier des charges dit quoi en résumé", "expect": ["docs/architecture/revue-senior-cdc-restaurant-suite"]}
+{"q": "quels sont les points bloquants relevés dans la revue du CDC", "expect": ["docs/architecture/revue-senior-cdc-restaurant-suite", "docs/architecture/ameliorations-cdc-priorisees"]}
+{"q": "quelle arborescence de dossiers est imposée pour matérialiser le dépôt", "expect": ["docs/architecture/specification-materialisation-depot"]}
+{"q": "quels scripts exécutables sont obligatoires dans le dépôt", "expect": ["docs/architecture/specification-materialisation-depot", "docs/cdc/restaurant-suite-cdc-v3/docs/REPOSITORY-MATERIALIZATION-GATE"]}
+{"q": "qu'est-ce que la matrice de tests de la phase 0.0 doit couvrir", "expect": ["docs/architecture/tests-matrix"]}
+{"q": "pourquoi le mode simulation a été choisi en V0.4 et quelles options ont été écartées", "expect": ["docs/architecture/v0.4-simulation-gate"]}
+{"q": "quelles sont les contraintes non négociables avant d'implémenter le dashboard", "expect": ["docs/architecture/v0.5-dashboard-gate"]}
+{"q": "quelles extensions sont installées sur le site existant du restaurant", "expect": ["docs/audits/restaurant_extensions_notes", "docs/audits/archive_inventory"]}
+{"q": "il y a une licence payante dans les extensions détectées ?", "expect": ["docs/audits/license_findings"]}
+{"q": "quels sont les constats de l'audit du site WordPress du Chef Anass", "expect": ["docs/audits/wordpress_audit_notes"]}
+{"q": "où sont situées les fonctions principales dans le code du thème", "expect": ["docs/audits/key_code_map"]}
+{"q": "quelles fonctionnalités existent déjà dans le thème acheté", "expect": ["docs/audits/ui_feature_map"]}
+{"q": "pourquoi un site WordPress vierge réel est préférable à une sandbox pour les tests", "expect": ["docs/cdc/restaurant-suite-cdc-v3/ADDENDUM-wordpress-vierge-reel", "docs/staging/ADDENDUM-wordpress-vierge-reel"]}
+{"q": "quels sont les principes non négociables du projet", "expect": ["docs/cdc/restaurant-suite-cdc-v3/CDC-Restaurant-Suite-complet"]}
+{"q": "quel environnement de référence est imposé et avec quelle version de WordPress", "expect": ["docs/cdc/restaurant-suite-cdc-v3/CDC-Restaurant-Suite-complet", "docs/cdc/restaurant-suite-cdc-v3/docs/compatibility-matrix"]}
+{"q": "qu'est-ce qui a changé entre la version 2 et la version 3 du pack CDC", "expect": ["docs/cdc/restaurant-suite-cdc-v3/CHANGELOG-v3", "docs/cdc/restaurant-suite-cdc-v3/CHANGELOG-v2"]}
+{"q": "par quels documents commencer la lecture du pack CDC", "expect": ["docs/cdc/restaurant-suite-cdc-v3/README"]}
+{"q": "quel est le premier sprint recommandé", "expect": ["docs/cdc/restaurant-suite-cdc-v3/README", "docs/roadmap/roadmap-restaurant-suite-finale"]}
+{"q": "dans quel ordre matérialiser le dépôt, étape par étape", "expect": ["docs/cdc/restaurant-suite-cdc-v3/docs/REPOSITORY-MATERIALIZATION-GATE", "docs/architecture/specification-materialisation-depot"]}
+{"q": "quelles versions de PHP et de WordPress sont compatibles avec le plugin", "expect": ["docs/cdc/restaurant-suite-cdc-v3/docs/compatibility-matrix"]}
+{"q": "que doit contenir la phase 0.0 en livrables", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/00-phase-0.0-contrats"]}
+{"q": "quelles fonctionnalités sont dans la V0.1 et quels tests sont exigés", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/01-v0.1-fondation-menu"]}
+{"q": "l'accessibilité du Quick View est obligatoire, que faut-il respecter", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/02-v0.2-quick-view-preview"]}
+{"q": "comment doit fonctionner l'aperçu en direct des modifications de plat", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/02-v0.2-quick-view-preview"]}
+{"q": "comment est géré l'état du panier qui s'ouvre sur le côté", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/03-v0.3-cart-drawer"]}
+{"q": "le panier doit-il utiliser le cache et les sessions WordPress", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/03-v0.3-cart-drawer"]}
+{"q": "quelles règles restaurant sont prévues en V0.4, par exemple les horaires", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/04-v0.4-whatsapp-regles"]}
+{"q": "comment se déroule le parcours client jusqu'à l'envoi WhatsApp", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/04-v0.4-whatsapp-regles"]}
+{"q": "quels écrans doit avoir le dashboard restaurant en V0.5", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/05-v0.5-dashboard"]}
+{"q": "quels sont les contrôles d'accès au dashboard", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/05-v0.5-dashboard", "docs/architecture/permissions-matrix"]}
+{"q": "que doit faire le thème enfant pour Elementor", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/06-v0.6-theme-elementor"]}
+{"q": "quels objectifs de performance et de SEO sont fixés pour le thème", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/06-v0.6-theme-elementor"]}
+{"q": "comment dupliquer le site pour un nouveau client restaurant", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/07-v0.7-duplication-onboarding"]}
+{"q": "comment importer et exporter la configuration d'un restaurant", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/07-v0.7-duplication-onboarding"]}
+{"q": "que faut-il vérifier avant de publier le site chez un client", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/07-v0.7-duplication-onboarding", "docs/staging/staging-checklist"]}
+{"q": "comment migrer en production et revenir en arrière si ça casse", "expect": ["docs/cdc/restaurant-suite-cdc-v3/phases/08-v1.0-production-migration"]}
+{"q": "quelle checklist suivre pour préparer un environnement de staging", "expect": ["docs/staging/staging-checklist", "docs/cdc/restaurant-suite-cdc-v3/templates/staging-checklist"]}
+{"q": "quels outils installer sur le poste de développement", "expect": ["docs/tooling/CDC-00-outillage-local", "docs/cdc/restaurant-suite-cdc-v3/tooling/CDC-00-outillage-local"]}
+{"q": "comment séparer les environnements local, staging et production", "expect": ["docs/tooling/CDC-00-outillage-local", "docs/tooling/INSTALL-local"]}
+{"q": "ou est le guide d'installation pas à pas avec les paquets système", "expect": ["docs/tooling/INSTALL-local", "docs/cdc/restaurant-suite-cdc-v3/tooling/INSTALL-local"]}
+{"q": "quels outils sont bloqués pour une version donnée et pourquoi", "expect": ["docs/tooling/CDC-OUTILS-PAR-VERSION"]}
+{"q": "quels outils complémentaires sont recommandés en plus du CDC", "expect": ["docs/tooling/audit-outils-complementaires-restaurant-suite"]}
+{"q": "quel est le journal des décisions et des travaux réalisés jour par jour", "expect": ["docs/developer-log"]}
+{"q": "qu'est-ce qui a été validé lors de la phase 0.0 en local", "expect": ["docs/reports/phase-0.0-local-validation"]}
+{"q": "que reste-t-il bloqué au niveau du staging", "expect": ["docs/reports/phase-0.0-local-validation", "docs/reports/staging-execution-log"]}
+{"q": "quel jour le staging a été exécuté et avec quelles dépendances", "expect": ["docs/reports/staging-execution-log"]}
+{"q": "quels incidents ont eu lieu pendant la validation du panier", "expect": ["docs/reports/v0.3-cart-drawer-validation"]}
+{"q": "quelles limites ont été acceptées pour le Quick View", "expect": ["docs/reports/v0.2-quick-view-validation"]}
+{"q": "comment l'API panier de WooCommerce est utilisée", "expect": ["docs/reports/woocommerce-cart-api-notes"]}
+{"q": "quelle est la roadmap complète et l'ordre des versions", "expect": ["docs/roadmap/roadmap-restaurant-suite-finale"]}
+{"q": "quelle décision d'architecture a été prise sur la duplication pour les clients", "expect": ["docs/roadmap/roadmap-restaurant-suite-finale", "docs/architecture/revue-senior-cdc-restaurant-suite", "decisions/0001-project-status"]}

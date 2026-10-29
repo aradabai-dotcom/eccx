@@ -76,6 +76,25 @@ contient. **La bonne configuration ici est le mode lexical.**
   shortlist, pas une réponse.
 - **Ne cherchez pas le modèle.** Mesurez d'abord à zéro coût.
 
+## Troisième passage : votre corpus, et la référence qui manquait
+
+Les deux mesures ci-dessus comparent le routeur à lui-même. C'est insuffisant :
+une armée qui bat « rien » ne prouve rien. Sur un troisième corpus — le vrai
+projet WordPress, 59 documents, 60 requêtes écrites avant mesure — la même
+comparaison a été refaite **contre `grep` brut**, et le résultat est le seul
+chiffre de cette page qui vaille comme promesse : 66,7 % @1 et 78,3 % @3 contre
+8,3 % et 26,7 % pour `grep` (p < 0,0001 à chaque profondeur). Les embeddings,
+eux, n'ajoutent toujours rien : −3,4 points @1, p = 0,625.
+
+Détail, échecs et décision : `docs/CORPUS-RESTAURANT-SUITE.md`.
+
+> Règle ajoutée : **toute mesure de routage inclut désormais `grep` comme
+> quatrième colonne.** `tools/grep_baseline.py --against` refuse la comparaison
+> si les deux jeux de rangs ne portent pas sur les mêmes requêtes, et lit
+> exactement les mêmes suffixes que l'indexeur — ni plus (ce serait offrir au
+> concurrent ce que le produit n'a pas le droit de lire), ni moins (c'est le bug
+> qui a d'abord perdu six documents).
+
 ## Reproduire
 
 ```bash
