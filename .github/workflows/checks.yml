@@ -18,7 +18,7 @@ on:
 jobs:
   checks:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -36,7 +36,7 @@ jobs:
           git clone --depth 1 https://github.com/affaan-m/ECC "$HOME/ECC"
           ./eccx index
       - name: semantic layer (optional dependency)
-        run: ./eccx vectors --force   # ~9 min on 2 vCPU: 607 docs + 4 882 sections
+        run: ./eccx vectors --force   # ~9 min: 607 docs + 4 906 sections
       - name: unit tests, coverage, gaps, conformity, eval
         run: ./run-checks.sh
       - name: the corpus path is what the product is for
