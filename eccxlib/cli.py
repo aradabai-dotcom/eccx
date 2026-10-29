@@ -1541,6 +1541,11 @@ def main(argv: list[str] | None = None) -> int:
     _use_corpus_state(_corpus_root(args))
     try:
         return args.func(args)
+    except indexer.CatalogueAbsent as exc:
+        # A missing catalogue is an environment problem with one known fix,
+        # not a traceback. Exit 2 so a script can tell it apart from a no-hit.
+        print(c("catalogue absent", "r") + f"  {exc}", file=sys.stderr)
+        return 2
     except BrokenPipeError:
         return 0
     except KeyboardInterrupt:

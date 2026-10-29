@@ -78,12 +78,43 @@ def sample(fn, repeats: int = REPEATS) -> dict:
 
 
 def cli(*args: str) -> None:
-    subprocess.run([sys.executable, str(ROOT / "eccx"), *args],
-                   capture_output=True, cwd=ROOT, check=True)
+    """Run the CLI and *show what it said* when it fails.
+
+    The original used `check=True` with captured output, so a failing child
+    surfaced as `CalledProcessError: returned non-zero exit status 1` and
+    nothing else. That silent harness hid a red perf job for as long as it
+    existed: the child was reporting "golden set: 0 intents" — an empty
+    catalogue — and the harness threw the explanation away.
+    """
+    r = subprocess.run([sys.executable, str(ROOT / "eccx"), *args],
+                       capture_output=True, text=True, cwd=ROOT)
+    if r.returncode:
+        said = (r.stderr.strip() or r.stdout.strip())[-800:]
+        raise SystemExit(
+            f"`eccx {' '.join(args)}` exited {r.returncode}. A budget timed on "
+            f"a command that fails measures nothing. The child said:\n{said}")
+
+
+def require_catalogue(idx: dict) -> int:
+    """Refuse to time routing against a catalogue that is not there.
+
+    With ECC_ROOT missing (no ~/ECC, no $ECC_ROOT), the indexer returns a
+    handful of local documents and `eval` reports 0 % recall — a number that
+    looks like a catastrophic regression and is really a missing clone.
+    """
+    skills = sum(1 for d in idx.get("docs", []) if d.get("kind") == "skill")
+    if skills < 100:
+        raise SystemExit(
+            f"catalogue absent : {skills} skills indexés, il en faut ~311. "
+            f"ECC_ROOT={__import__('os').environ.get('ECC_ROOT', '~/ECC')} — "
+            f"ces budgets mesureraient le routage d'un corpus vide.\n"
+            f"  git clone --depth 1 https://github.com/affaan-m/ECC ~/ECC && ./eccx index")
+    return skills
 
 
 def build_benchmarks() -> list[dict]:
     idx = indexer.load()
+    require_catalogue(idx)
     queries = [c["q"] for c in evaluate.load_golden(ROOT / "evals" / "routing.jsonl")][:25]
     long_query = "reduce the cost of our api calls without breaking behaviour"
     q = queries[0]
@@ -128,14 +159,34 @@ def build_benchmarks() -> list[dict]:
             "fn": lambda: cli("stats"),
         },
         {
-            "name": "eccx recall --k 2 (process start incl.)",
-            "budget_s": 0.42,   # median 0.139s  p90 0.146s
-            "fn": lambda: cli("recall", "debug a flaky python test", "--k", "2"),
+            # --no-semantic is not a shortcut, it is the only way this budget
+            # means the same thing on two machines. `recall` defaults to
+            # semantic, which silently loads the model *when vectors happen to
+            # exist on the host* — 0.17 s here, 1.27 s with the model, and a
+            # different number again on the runner. The shipped default is
+            # lexical (see docs/CORPUS-RESTAURANT-SUITE.md), so that is timed.
+            "name": "eccx recall --k 2, lexical (process start incl.)",
+            "budget_s": 0.52,   # median 0.172s  p90 0.217s
+            "fn": lambda: cli("recall", "debug a flaky python test", "--k", "2",
+                              "--no-semantic"),
+        },
+        {
+            # What turning the model on actually costs, declared rather than
+            # implied. Not part of the shipped default; kept so the price is
+            # visible next to the benefit, which the corpus measurement says
+            # is zero.
+            "name": "eccx recall --k 2, sémantique (modèle inclus)",
+            "budget_s": 3.81,   # median 1.271s  p90 1.316s
+            "fn": lambda: cli("recall", "debug a flaky python test", "--k", "2",
+                              "--semantic"),
         },
         {
             "name": "eccx eval, 50 dev cases, lexical",
             "budget_s": 1.33,   # median 0.445s  p90 0.451s
-            "fn": lambda: cli("eval", "--quiet"),
+            # --no-semantic makes the label true. With vectors present on the
+            # machine this used to time the semantic path and call it lexical;
+            # a benchmark whose inputs depend on the host is not a benchmark.
+            "fn": lambda: cli("eval", "--quiet", "--no-semantic"),
         },
     ]
 

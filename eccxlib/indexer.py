@@ -70,6 +70,23 @@ def _doc(kind: str, cid: str, path: Path, root: Path, extra: dict | None = None)
     }
 
 
+class CatalogueAbsent(RuntimeError):
+    """The catalogue root has no upstream skills.
+
+    Raised *before* anything is written. `eccx index` used to persist whatever
+    it found, so running it without ~/ECC silently replaced a 607-document
+    index with the 3 local-overlay skills — and everything downstream (eval,
+    recall, budgets) then measured a corpus that was not there, at 0 % recall.
+    A build that would delete the catalogue is a missing clone, never an
+    intent, so the old index is left untouched.
+    """
+
+
+def _upstream_skills(docs: list[dict]) -> int:
+    return sum(1 for d in docs
+               if d.get("kind") == "skill" and d.get("extra", {}).get("origin") != "local")
+
+
 def build(root: Path = ECC_ROOT) -> dict:
     docs: list[dict] = []
 
@@ -129,6 +146,14 @@ def build(root: Path = ECC_ROOT) -> dict:
             "extra": {},
         })
 
+    if not _upstream_skills(docs):
+        raise CatalogueAbsent(
+            f"aucun skill amont sous {root}/skills — rien n'a été écrit, "
+            f"l'index existant est intact.\n"
+            f"  git clone --depth 1 https://github.com/affaan-m/ECC {root} && "
+            f"./eccx index\n"
+            f"  (ou ECC_ROOT=/chemin/vers/ECC ./eccx index)")
+
     index = {
         "version": INDEX_VERSION,
         "ecc_root": str(root),
@@ -141,11 +166,22 @@ def build(root: Path = ECC_ROOT) -> dict:
     return index
 
 
+def _usable(data) -> bool:
+    """Is this cached index a catalogue, or the wreck of a bad build?
+
+    "non-empty" is not enough. An index built while ~/ECC was missing holds
+    only the local-overlay skills and still passes a `docs` check, so `load()`
+    handed it back forever: the corruption was sticky, and the only symptom was
+    0 % recall downstream.
+    """
+    return (isinstance(data, dict) and data.get("version") == INDEX_VERSION
+            and bool(data.get("docs")) and _upstream_skills(data["docs"]) > 0)
+
+
 def load(force: bool = False) -> dict:
     if not force:
         data = load_json(INDEX_PATH, None)
-        if (isinstance(data, dict) and data.get("version") == INDEX_VERSION
-                and data.get("docs")):
+        if _usable(data):
             return data
     return build()
 

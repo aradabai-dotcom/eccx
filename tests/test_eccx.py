@@ -2485,20 +2485,30 @@ class TestIndexerBuild(unittest.TestCase):
         again = self.ix.load_json_soft()
         self.assertEqual(again["count"], idx["count"])
 
-    def test_empty_tree_still_carries_the_local_overlay(self):
-        """`build(root)` is not a pure function of `root`.
+    def test_empty_tree_is_refused_but_the_overlay_is_still_merged(self):
+        """`build(root)` is not a pure function of `root` — and never a silent one.
 
-        The adapter's own skills live outside the ECC tree (`skills-local/`) and
-        are merged in unconditionally. Documented here rather than "fixed":
-        moving them would break `eccx sync`. What matters is that the coupling is
-        visible and asserted, so nobody debugs it twice.
+        The adapter's own skills live outside the ECC tree (`skills-local/`)
+        and are merged in on every build; moving them would break `eccx sync`,
+        so that coupling is asserted here rather than "fixed". What changed:
+        a tree with *no upstream skill* used to return those three overlay
+        skills and persist them, which is how a 607-document index was once
+        overwritten by a 3-document one. It now refuses, and the overlay is
+        asserted on a tree that has one real skill in it.
         """
+        from eccxlib.indexer import CatalogueAbsent
         with tempfile.TemporaryDirectory() as d:
-            idx = self.ix.build(Path(d))
+            with self.assertRaises(CatalogueAbsent):
+                self.ix.build(Path(d))
+            root = Path(d)
+            (root / "skills" / "vrai-skill").mkdir(parents=True)
+            (root / "skills" / "vrai-skill" / "SKILL.md").write_text(
+                "# Vrai\n\n## Usage\n\nUn skill amont.\n")
+            idx = self.ix.build(root)
         overlay = len([p for p in (ROOT / "skills-local").iterdir()
                        if (p / "SKILL.md").is_file()])
-        self.assertEqual(idx["count"], overlay)
-        self.assertTrue(all(d["extra"].get("origin") == "local" for d in idx["docs"]))
+        self.assertEqual(idx["count"], 1 + overlay)
+        self.assertEqual(idx["count_local"], overlay)
         self.assertEqual(idx["count_local"], overlay)
         # The overlay skills do have H2 sections; they are not zero just
         # because the root is empty.
@@ -3099,7 +3109,12 @@ class TestIndexLoadContract(unittest.TestCase):
         self.tmp.cleanup()
 
     def _cache(self, **over):
-        payload = {"version": self.ix.INDEX_VERSION, "docs": [{"id": "CACHED"}]}
+        # A plausible cache: a skill with no "local" origin. The id alone is
+        # not enough any more — `load` also checks the cache holds a catalogue
+        # (see TestCatalogueGuard), so a bare {"id": "CACHED"} is now, rightly,
+        # indistinguishable from the wreck of a build that ran without ~/ECC.
+        payload = {"version": self.ix.INDEX_VERSION,
+                   "docs": [{"id": "CACHED", "kind": "skill", "extra": {}}]}
         payload.update(over)
         self.ix.INDEX_PATH.write_text(json.dumps(payload))
 
@@ -3110,6 +3125,17 @@ class TestIndexLoadContract(unittest.TestCase):
         self._cache()
         self.assertEqual(self._ids(self.ix.load()), ["CACHED"])
         self.assertEqual(self.calls, 0)
+
+    def test_a_cache_holding_only_the_overlay_is_rebuilt(self):
+        """The sticky-corruption case: non-empty, right version, no catalogue.
+
+        Left in place, it was handed back by every subsequent `load()` and the
+        only symptom was 0 % recall three tools later.
+        """
+        self._cache(docs=[{"id": "pii-redaction", "kind": "skill",
+                           "extra": {"origin": "local"}}])
+        self.assertEqual(self._ids(self.ix.load()), ["REBUILT"])
+        self.assertEqual(self.calls, 1)
 
     def test_wrong_version_is_rebuilt(self):
         self._cache(version=self.ix.INDEX_VERSION - 1)
@@ -5116,3 +5142,68 @@ class TestGrepBaseline(unittest.TestCase):
         self.assertIn("routeur mieux", r.stdout)
         self.assertIn("@1 | 0 | 1 |", r.stdout)
         self.assertIn("indistinguable", r.stdout)
+
+
+class TestCatalogueGuard(unittest.TestCase):
+    """A build that would delete the catalogue must delete nothing.
+
+    Found the hard way: running the perf budgets with $HOME pointing at an
+    empty directory rebuilt the index from the three local-overlay skills and
+    overwrote a 607-document index. `load()` then accepted the wreck — it was
+    non-empty and the version matched — so the corruption was sticky and the
+    only visible symptom was 0 % recall three tools later. These tests pin both
+    halves: the build refuses, and a cached wreck is not accepted.
+    """
+
+    def setUp(self):
+        import tempfile
+        from unittest import mock
+        self.dir = Path(tempfile.mkdtemp())
+        self.empty = self.dir / "pas-de-catalogue"
+        self.empty.mkdir()
+        from eccxlib import indexer
+        self.indexer = indexer
+        self.patch = mock.patch.object(indexer, "INDEX_PATH",
+                                       self.dir / "index.json")
+        self.patch.start()
+
+    def tearDown(self):
+        self.patch.stop()
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_build_without_a_catalogue_writes_nothing(self):
+        from eccxlib.indexer import CatalogueAbsent
+        with self.assertRaises(CatalogueAbsent) as ctx:
+            self.indexer.build(root=self.empty)
+        self.assertFalse((self.dir / "index.json").exists())
+        self.assertIn("git clone", str(ctx.exception))
+
+    def test_the_previous_index_survives_a_refused_build(self):
+        from eccxlib.indexer import CatalogueAbsent
+        good = {"version": self.indexer.INDEX_VERSION, "docs": [
+            {"id": "s", "kind": "skill", "extra": {}}]}
+        (self.dir / "index.json").write_text(json.dumps(good))
+        with self.assertRaises(CatalogueAbsent):
+            self.indexer.build(root=self.empty)
+        self.assertEqual(json.loads((self.dir / "index.json").read_text()), good)
+
+    def test_a_wrecked_index_is_not_handed_back_by_load(self):
+        """Non-empty + right version is not proof of a catalogue.
+
+        With a real catalogue on the machine, `load()` must rebuild over the
+        wreck; with none, `build()` raises instead of returning three skills
+        (that half is test_build_without_a_catalogue_writes_nothing).
+        """
+        wreck = {"version": self.indexer.INDEX_VERSION, "docs": [
+            {"id": "pii-redaction", "kind": "skill", "extra": {"origin": "local"}}]}
+        (self.dir / "index.json").write_text(json.dumps(wreck))
+        idx = self.indexer.load()
+        self.assertGreater(self.indexer._upstream_skills(idx["docs"]), 0)
+        self.assertNotEqual([d["id"] for d in idx["docs"]], ["pii-redaction"])
+
+    def test_local_overlay_skills_do_not_count_as_upstream(self):
+        docs = [{"kind": "skill", "extra": {"origin": "local"}},
+                {"kind": "skill", "extra": {}},
+                {"kind": "rule", "extra": {}}]
+        self.assertEqual(self.indexer._upstream_skills(docs), 1)
