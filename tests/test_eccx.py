@@ -2929,11 +2929,14 @@ class TestPublicContracts(unittest.TestCase):
                            [{"q": "sourdough bread hydration",
                              "expect": ["skill:beta"]}])
         self.assertEqual(set(res["metrics"]),
-                         # `recall@10` / `recall@20` added: they are the depths the
-                     # product is actually used at (a shortlist the agent reads),
-                     # not vanity depths.
+                         # `recall@10` / `recall@20`: the depths the product is
+                     # actually used at (a shortlist the agent reads), not
+                     # vanity depths. `semantic`: whether the run really used
+                     # the embeddings, so a degraded run cannot be quoted as a
+                     # full one — the same reason `expanded`/`terms_added`
+                     # exist for Rocchio.
                      {"cases", "recall@1", "recall@3", "recall@5",
-                      "recall@10", "recall@20", "mrr"})
+                      "recall@10", "recall@20", "mrr", "semantic"})
 
     def test_rerank_metrics_add_exactly_three_keys(self):
         from eccxlib import rerank
@@ -2947,7 +2950,7 @@ class TestPublicContracts(unittest.TestCase):
                 rerank.CACHE = real
         self.assertEqual(set(res["metrics"]) - {"cases", "recall@1", "recall@3",
                                                 "recall@5", "recall@10",
-                                                "recall@20", "mrr"},
+                                                "recall@20", "mrr", "semantic"},
                          {"rerank_coverage", "escalated", "judged_deeper"})
 
     def test_report_line_format(self):
@@ -4899,3 +4902,62 @@ class TestCorpus(unittest.TestCase):
         self.assertFalse([i for i in ids if i.startswith("skill:")],
                          "ecc ids leaked into a corpus run")
         self.assertTrue(state.exists())
+
+
+class TestLeanInstall(unittest.TestCase):
+    """Without fastembed: run, degrade, do not crash.
+
+    Found by cloning the repository cold and following its own README. Three
+    separate defects, all of the same shape — a command that works in the
+    developer's environment and dies in a clean one:
+
+      * `eccx index` did not exist (the first line of the README, and of CI)
+      * `eccx eval` raised ModuleNotFoundError instead of measuring the lexical
+        router that `eccx recall` was already using
+      * `run-checks.sh` enforced routing bars measured *with* the semantic
+        layer, so the gate could never pass on the install it recommends
+
+    The tests below hold the first two; the third is a shell branch, verified by
+    running the gate with `ECCX_LEXICAL=1`.
+    """
+
+    def test_eval_degrades_instead_of_raising(self):
+        import subprocess
+        import sys as _sys
+        code = (
+            "import sys, types\n"
+            "sys.modules['fastembed'] = None\n"   # import fastembed -> ImportError
+            "import builtins\n"
+            "real = builtins.__import__\n"
+            "def fake(name, *a, **k):\n"
+            "    if name == 'fastembed': raise ImportError('absent')\n"
+            "    return real(name, *a, **k)\n"
+            "builtins.__import__ = fake\n"
+            "sys.path.insert(0, '.')\n"
+            "from eccxlib import evaluate\n"
+            "m = evaluate.run({'docs': [{'id': 'a', 'kind': 'skill', 'name': 'Alpha',\n"
+            "                            'desc': 'beta gamma', 'headings': [],\n"
+            "                            'sections': [], 'extra': {}}]},\n"
+            "                 [{'q': 'alpha', 'expect': ['skill:a']}], k=2, semantic=True)\n"
+            "assert m['metrics']['semantic'] is False, m['metrics']\n"
+            "assert m['metrics']['recall@1'] == 1.0, m['metrics']\n"
+            "print('ok')\n")
+        r = subprocess.run([_sys.executable, "-c", code], cwd=ROOT,
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("ok", r.stdout)
+
+    def test_index_is_a_real_command(self):
+        r = run("index")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("indexed", r.stdout)
+        self.assertIn("sections", r.stdout)
+
+    def test_index_accepts_a_corpus_and_reports_it(self):
+        from tempfile import mkdtemp
+        d = Path(mkdtemp()) / "n"
+        (d / "p").mkdir(parents=True)
+        (d / "p" / "x.md").write_text("# Titre\n\n## A\n\ncontenu\n")
+        r = run("--corpus", str(d), "index")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("1 documents", r.stdout)

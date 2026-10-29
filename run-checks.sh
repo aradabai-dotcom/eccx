@@ -87,6 +87,20 @@ echo "== semantic vectors (optional; skipped without fastembed) =="
 ./eccx vectors >/dev/null 2>&1 && echo "  vectors current" \
   || echo "  not built (fastembed absent or offline) — lexical routing"
 
+# The bars below were measured with the semantic layer on. Running them on a
+# lean install made the gate fail for a reason that is not a regression, and a
+# gate that cries wolf is a gate people learn to ignore. So the mode is
+# detected once, and the lexical bars are the *measured* lexical numbers minus
+# a margin — not a hopeful guess. CI installs `[dev]` (fastembed included) and
+# therefore always takes the full branch; `--lexical` forces this one.
+if ./eccx vectors >/dev/null 2>&1; then
+  MODE="semantic"
+else
+  MODE="lexical"
+fi
+[ "${ECCX_LEXICAL:-0}" = "1" ] && MODE="lexical"
+echo "  gate mode: $MODE"
+
 echo
 echo "== routing quality bar (dev set) =="
 ./eccx eval --quiet --min-recall 0.9
@@ -102,13 +116,15 @@ eval_rc=$?
 # ranking change needs a fresh set, written before looking at anything.
 echo
 echo "== generalisation floor (evals/heldout5.jsonl, never used for tuning) =="
-./eccx eval --file evals/heldout5.jsonl --k 3 --min-recall 0.38 --quiet
+if [ "$MODE" = "semantic" ]; then H5_3=0.38; else H5_3=0.30; fi
+./eccx eval --file evals/heldout5.jsonl --k 3 --min-recall $H5_3 --quiet
 heldout_rc=$?
 
 # The depth the product is actually used at. `--min-recall` defaults to 0.90, so
 # asking for it at k=20 is a real floor: the shortlist must keep containing the
 # answer 9 times out of 10 on a set nobody tuned against.
-./eccx eval --file evals/heldout5.jsonl --k 20 --min-recall 0.70 --quiet
+if [ "$MODE" = "semantic" ]; then H5_20=0.70; else H5_20=0.55; fi
+./eccx eval --file evals/heldout5.jsonl --k 20 --min-recall $H5_20 --quiet
 shortlist_rc=$?
 
 # `heldout7` (59 queries) was written in one sitting to test section-level
@@ -116,23 +132,28 @@ shortlist_rc=$?
 # p = 0.031. It then became a regression bar like heldout5. Floors are set
 # below the measured values, not at them — a bar set at the measurement fails
 # on the next run for reasons that have nothing to do with routing.
-./eccx eval --file evals/heldout7.jsonl --k 1 --min-recall 0.33 --quiet
+if [ "$MODE" = "semantic" ]; then H7_1=0.33; else H7_1=0.18; fi
+./eccx eval --file evals/heldout7.jsonl --k 1 --min-recall $H7_1 --quiet
 sealed1_rc=$?
-./eccx eval --file evals/heldout7.jsonl --k 20 --min-recall 0.70 --quiet
+if [ "$MODE" = "semantic" ]; then H7_20=0.70; else H7_20=0.62; fi
+./eccx eval --file evals/heldout7.jsonl --k 20 --min-recall $H7_20 --quiet
 sealed20_rc=$?
 
 # `heldout8` (40 queries) is the second blind batch. `heldout7+8` is the test
 # that decided the matter: 10 gains / 2 losses at @1, p = 0.039, on 99 queries
 # no parameter had ever seen.
-./eccx eval --file evals/heldout8.jsonl --k 1 --min-recall 0.22 --quiet
+if [ "$MODE" = "semantic" ]; then H8_1=0.22; else H8_1=0.12; fi
+./eccx eval --file evals/heldout8.jsonl --k 1 --min-recall $H8_1 --quiet
 sealed8_rc=$?
 
 # `heldout9` (50 queries) was the blind set for the cross-encoder reranker.
 # That reranker lost 51 queries and won 5, so the set now guards the shipped
 # ranking against a future "let's just reorder the top 20" idea.
-./eccx eval --file evals/heldout9.jsonl --k 1 --min-recall 0.34 --quiet
+if [ "$MODE" = "semantic" ]; then H9_1=0.34; else H9_1=0.20; fi
+./eccx eval --file evals/heldout9.jsonl --k 1 --min-recall $H9_1 --quiet
 sealed9_rc=$?
-./eccx eval --file evals/heldout9.jsonl --k 20 --min-recall 0.80 --quiet
+if [ "$MODE" = "semantic" ]; then H9_20=0.80; else H9_20=0.68; fi
+./eccx eval --file evals/heldout9.jsonl --k 20 --min-recall $H9_20 --quiet
 sealed9b_rc=$?
 
 # The suite tests `render_bundle`; only this tests the *promise*, through the

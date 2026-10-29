@@ -1,0 +1,80 @@
+name: checks
+
+# The gates exist as scripts; this makes them gates. Before this file, every
+# check in run-checks.sh ran only when a human remembered to type it.
+#
+# Three jobs, because they have three different costs and three different
+# failure semantics:
+#   checks    — deterministic, ~2 min, must block every push
+#   perf      — timing-sensitive, must NOT block on a noisy runner, runs on main
+#   mutation  — ~25 min, weekly + manual; its job is the *trend*, not the push
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install
+        # `[dev]` pulls numpy + pytest + coverage + fastembed: exactly what
+        # run-checks.sh needs. Before this step existed the job failed on
+        # `pytest: not found`; before `[dev]` carried fastembed it failed on the
+        # routing bars, which are measured with the semantic layer on.
+        run: pip install -e ".[dev]"
+      - name: the catalogue under test
+        # ECC is read from $ECC_ROOT (~/ECC by default) and is never vendored.
+        run: |
+          git clone --depth 1 https://github.com/affaan-m/ECC "$HOME/ECC"
+          ./eccx index
+      - name: semantic layer (optional dependency)
+        run: ./eccx vectors --force   # ~9 min on 2 vCPU: 607 docs + 4 882 sections
+      - name: unit tests, coverage, gaps, conformity, eval
+        run: ./run-checks.sh
+      - name: the corpus path is what the product is for
+        run: python3 tools/corpus_smoke.py
+      - name: coverage hole report (informational)
+        if: always()
+        run: python3 tools/coverage_holes.py || true
+
+  perf:
+    # Separate job on purpose: a shared runner is noisier than the 2-vCPU
+    # sandbox these budgets were declared on. A perf failure here is a signal
+    # to look, not an automatic block — hence `continue-on-error`.
+    needs: checks
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 perf/budgets.py
+
+  mutation:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install mutmut
+      - name: mutation score
+        run: ./tools/mutate.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutation-report
+          path: docs/MUTATION.md

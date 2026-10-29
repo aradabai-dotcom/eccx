@@ -23,7 +23,7 @@ import time
 from pathlib import Path
 
 from . import frontmatter as fm
-from . import hooks, indexer, memory, router
+from . import hooks, indexer, memory, router, util
 from .util import (ADAPTER_STATE, ADAPTER_ROOT, ECC_ROOT, c, doc_file, est_tokens, hr,
                    read_text, truncate)
 
@@ -126,6 +126,54 @@ def cmd_init(args) -> int:
     print(f"  project         {project}")
     print(f"  rule packs      {', '.join(_context_for(project))}")
     print(f"  memory          {msg}")
+    return 0
+
+
+def cmd_index(args) -> int:
+    """Build (or rebuild) the index and say what is in it.
+
+    Existed everywhere in the documentation and nowhere in the code: the index
+    was built implicitly by whichever command ran first, so `eccx index` — the
+    first line of every quickstart, including the one in CI — exited with
+    `invalid choice: 'index'`. Found by cloning the repository cold and
+    following its own README.
+    """
+    from . import semantic
+    root = _corpus_root(args)
+    if root is not None:
+        from . import corpus
+        idx = corpus.build(root)
+        corpus.save(idx, _state_dir(root))
+        st = corpus.stats(idx)
+        n_sec = st["sections"]
+        print(f"indexed {st['docs']} documents, {n_sec} sections, {st['tokens']:,} tokens")
+        print(f"  kinds   " + ", ".join(f"{k} ({v})" for k, v in st["kinds"].items()))
+        stored = _state_dir(root) / "index.json"
+    else:
+        idx = indexer.load(force=getattr(args, "force", False))
+        n_sec = sum(len(d.get("sections") or []) for d in idx["docs"])
+        counts: dict[str, int] = {}
+        for d in idx["docs"]:
+            counts[d["kind"]] = counts.get(d["kind"], 0) + 1
+        print(f"indexed {len(idx['docs'])} components, {n_sec} sections "
+              f"from {ECC_ROOT}")
+        print("  kinds   " + ", ".join(f"{k} ({v})" for k, v in
+                                       sorted(counts.items(), key=lambda kv: -kv[1])))
+        stored = ADAPTER_STATE / "index.json"
+    print(f"  stored  {stored}")
+    # Reading the vectors needs numpy only; building them, and embedding a
+    # query at run time, need fastembed. Reporting "not installed" as if the
+    # vectors were missing would be wrong on a machine where they are built.
+    allv = semantic.load_all(idx["docs"])
+    if allv is None:
+        print("  vectors not built")
+        print("          pip install 'eccx[semantic]'   then: eccx vectors")
+    else:
+        extra = "" if allv.get("sections") is not None else " (documents only)"
+        print(f"  vectors {allv['docs'].shape[0]} x {allv['docs'].shape[1]}{extra}")
+        if not semantic.available():
+            print("  fastembed absent — queries will route lexically until "
+                  "`pip install 'eccx[semantic]'`")
     return 0
 
 
@@ -1229,6 +1277,10 @@ def build_parser() -> argparse.ArgumentParser:
                    help="route over your own markdown instead of the ECC catalogue "
                         "(see `eccx corpus build --dir DIR`)")
     sub = p.add_subparsers(dest="command", required=True)
+
+    s = sub.add_parser("index", help="build the index and report what it contains")
+    s.add_argument("--force", action="store_true")
+    s.set_defaults(func=cmd_index)
 
     s = sub.add_parser("vectors", help="build local embedding vectors for --semantic")
     s.add_argument("--force", action="store_true", help="rebuild even if current")

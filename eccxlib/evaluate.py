@@ -40,6 +40,7 @@ def run(index: dict, golden: list[dict] | None = None,
         semantic: bool = False, sections: bool = True) -> dict:
     if golden is None:  # `[]` means "no cases", not "use the default file".
         golden = load_golden()
+    degraded = False
     known = ids(index)
     # An indexed directory names a document `kind:id`, and the id is already the
     # full relative path — so the qualified form reads `projets:projets/vpn`.
@@ -66,6 +67,16 @@ def run(index: dict, golden: list[dict] | None = None,
             # query whose seeds disagree adds nothing, and the run was then
             # presented as an expanded run with no way to tell otherwise.
             added = len(e["added"])
+        if semantic:
+            from . import semantic as sem
+            if not sem.available():
+                # Degrade, do not crash. `eccx recall` already falls back to the
+                # lexical router when fastembed is absent; the evaluator used to
+                # raise ModuleNotFoundError instead — so on a lean install the
+                # *measurement* tool was the one thing that did not work, and it
+                # died on a machine where the product itself was fine.
+                semantic = False
+                degraded = True
         if semantic:
             from . import semantic as sem
             # `load_all`, not `load_vectors`: the shipped router scores a
@@ -112,7 +123,7 @@ def run(index: dict, golden: list[dict] | None = None,
                      "expanded": bool(added), "terms_added": added})
 
     n = len(rows) or 1
-    metrics = {"cases": len(rows)}
+    metrics = {"cases": len(rows), "semantic": not degraded and semantic}
     # Always report 1/3/5 plus whatever depth was asked for. Building only
     # `recall@k` meant `eccx eval --k 3` produced no `recall@5` key and
     # `report()` crashed with KeyError on a perfectly valid run — a metric

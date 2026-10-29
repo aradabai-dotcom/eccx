@@ -1,27 +1,32 @@
-# eccx — ECC adapté à cette sandbox
+# eccx — router un symptôme vers le bon document
 
-Un **harness adapter** : la couche que Claude Code / Codex / Cursor fournissent
-autour d'ECC, reconstruite pour que l'agent de la sandbox puisse s'en servir.
+Un routeur pour gros corpus markdown : vous décrivez **ce qui se passe**, il
+renvoie les 20 documents qui peuvent répondre — dans un budget de tokens dur.
 
-```
-ECC (affaan-m/ECC, v2.2.3)  ──┐
-  311 skills, 71 agents,      │   ce qu'un harness fait :
-  97 commandes, 121 règles    │   1. découvrir  2. router  3. hooks  4. MCP
-                              ▼
-                          eccx  ──►  l'agent dans la sandbox
+```bash
+pip install -e ".[dev]"
+./eccx corpus build --dir ~/notes
+./eccx --corpus ~/notes recall "le tunnel tombe chaque nuit vers trois heures" --k 5
 ```
 
-- **2 500 lignes** de Python, stdlib uniquement (hors le CLI Node d'ECC)
-- **83 tests**, **72 %** de couverture mesurée en sous-processus compris
-- **Retrieval mesuré sur deux jeux held-out vierges** : recall@1 **20 % → 90 %**
-- `eccx ...` utilisable partout (`/home/user/eccx`)
+Deux corpus sont pris en charge :
 
-> **Les chiffres honnêtes.** La v2 annonçait `recall@1 = 72 %`, mesuré sur des
-> requêtes écrites en concevant le routeur. Sur deux jeux écrits **à l'aveugle
-> avant chaque fonctionnalité**, le vrai baseline était **33,3 %** puis **20 %** ;
-> après rerank et escalade on atteint **90 %** sur le jeu le plus récent.
-> L'expansion Rocchio, elle, a été mesurée **négative** et reste désactivée.
-> Tout est reproductible dans [`docs/QUALITY.md`](docs/QUALITY.md).
+| corpus | comment |
+|---|---|
+| **le vôtre** (notes, décisions, doc interne) | `--corpus DIR` : taxonomie = dossiers, sections = titres, ids = chemins relatifs. Index dans `~/.eccx/`, jamais dans votre dossier. |
+| **le catalogue ECC** (`affaan-m/ECC`) | clone dans `$ECC_ROOT` (`~/ECC` par défaut), puis `eccx index` |
+
+- **503 tests**, couverture **89 %** mesurée en sous-processus compris, **80,4 %** de mutation
+- **Shortlist à 80,5 % @20 pour 677 tokens**, contre 1 071 212 pour le catalogue entier
+- `--budget` est une promesse dure, vérifiée par le gate
+
+> **Les chiffres honnêtes.** `@1` vaut **34,9 %** sur 149 requêtes écrites avant
+> toute mesure (13 gains / 3 pertes contre la référence, p = 0,021). Ce n'est pas
+> « le routage est réglé » : la bonne réponse est *dans la shortlist* quatre fois
+> sur cinq, ce qui n'est pas la même promesse. Sur un corpus personnel, la couche
+> sémantique n'ajoute que +2,5 points @1 non significatifs : **le gain vient
+> d'indexer le corps du document**, et le mode lexical est gratuit.
+> Détail, échecs et corrections : [`docs/`](docs/).
 
 ---
 
@@ -214,7 +219,7 @@ l'outil ne puisse pas mentir sur lui-même.
 | Enforcement des hooks | bonne volonté | **git pre-commit** |
 | Probe MCP (34 serveurs) | 163 s | **8,1 s** / 0,056 s en cache |
 | Reranker cross-encoder | — | **testé, éliminé** : 5 gains / 51 pertes sur 50 requêtes aveugles (p < 0,0001) — il ramène au littéral et détruit le signal symptôme→pratique |
-| Tests / couverture | 37 / non mesurée | **500 tests / couverture 89 %** (branches + sous-processus inclus) + 19 propriétés + **80,4 % de mutation** (2 639 mutants, plancher mesuré) |
+| Tests / couverture | 37 / non mesurée | **503 tests / couverture 89 %** (branches + sous-processus inclus) + 19 propriétés + **80,4 % de mutation** (2 639 mutants, plancher mesuré) |
 | Parseur YAML | non validé | **croisé avec js-yaml** |
 | Rappel annoncé | 72 % (jeu contaminé) | **36,7 % baseline réel / 73,3 % reranké** |
 | Reranker | aucun | **+36,6 pts recall@1, 96 % du plafond** |

@@ -16,7 +16,12 @@ dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
 semantic = ["fastembed>=0.4"]
-dev = ["pytest", "mutmut>=3"]
+# `dev` includes the semantic extra on purpose: `run-checks.sh` enforces routing
+# bars measured *with* fastembed, and a gate that cannot pass on its own
+# recommended install is a gate people switch off. `eccx` itself still runs
+# without it — `run-checks.sh` detects the lean mode and uses the lexical bars,
+# which are measured, not guessed.
+dev = ["pytest", "coverage", "mutmut>=3", "fastembed>=0.4"]
 
 [project.scripts]
 eccx = "eccxlib.cli:main"
