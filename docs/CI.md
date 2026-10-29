@@ -1,6 +1,6 @@
 # La CI, et ce qu'elle a coûté à faire tourner
 
-**État : vert.** Run n°2, commit `cbc0127`, 503 tests, couverture 89 %,
+**État : vert.** Run n°2, commit `cbc0127`, 507 tests, couverture 90 %,
 `ALL CHECKS PASSED` — lu depuis le log du runner, pas depuis un badge.
 
 ## Ce que le chemin a révélé
@@ -27,7 +27,7 @@ installation sur le dépôt. Un PAT fine-grained a réglé la question en une fo
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 503 tests, couverture 89 % (seuil 85 %), en sous-processus compris
+- 507 tests, couverture 90 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable

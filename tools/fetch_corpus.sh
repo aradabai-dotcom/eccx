@@ -1,30 +1,38 @@
 #!/usr/bin/env bash
-# Fetch the independent validation corpus used in docs/CORPUS.md.
+# Fetch the independent validation corpora used in docs/.
 #
-# FastAPI's documentation: 156 markdown pages, ~986 sections, written for
-# humans by someone who never heard of this project. It exists here for one
-# reason — to check that the mechanism measured on the ECC catalogue is a
-# property of *retrieval*, not of that catalogue.
+#   tools/fetch_corpus.sh fastapi [DEST]   # 156 pages, 986 sections
+#   tools/fetch_corpus.sh pydantic [DEST]  # 91 pages, 388 sections
 #
-# Not vendored: third-party content, MIT-licensed but 19 MB of it. Re-fetched
-# on demand.
+# Kept out of the repository for two reasons: third-party content, and 19 MB.
+# Both are written for humans by people who never heard of this project, which
+# is exactly why they are the control: a result on them cannot be an artefact
+# of the catalogue the router was tuned on.
 set -euo pipefail
 
-DEST="${1:-/tmp/corpus/fastapi-docs}"
+WHICH="${1:-fastapi}"
+DEST="${2:-/tmp/corpus/$WHICH}"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "downloading fastapi docs..."
-curl -sL -o "$TMP/fa.tgz" https://codeload.github.com/fastapi/fastapi/tar.gz/refs/heads/master
-mkdir -p "$DEST"
-tar xzf "$TMP/fa.tgz" -C "$TMP" --strip-components=3 fastapi-master/docs/en/docs
-cp -r "$TMP/docs/en/docs/." "$DEST/" 2>/dev/null || \
-  (mkdir -p "$TMP/x" && tar xzf "$TMP/fa.tgz" -C "$TMP/x" --strip-components=2 \
-     fastapi-master/docs/en/docs && cp -r "$TMP/x/docs/en/docs/." "$DEST/")
+case "$WHICH" in
+  fastapi)  REPO="fastapi/fastapi";  SUB="fastapi-master/docs/en/docs" ;;
+  pydantic) REPO="pydantic/pydantic"; SUB="pydantic-main/docs" ;;
+  *) echo "corpus inconnu: $WHICH (fastapi|pydantic)" >&2; exit 2 ;;
+esac
+
+echo "downloading $REPO..."
+curl -sL -o "$TMP/x.tgz" "https://codeload.github.com/$REPO/tar.gz/refs/heads/main"
+mkdir -p "$TMP/ex" "$DEST"
+tar xzf "$TMP/x.tgz" -C "$TMP/ex" --strip-components=0
+src="$TMP/ex/$SUB"
+[ -d "$src" ] || { echo "chemin introuvable: $SUB" >&2; exit 1; }
+cp -r "$src/." "$DEST/"
 
 n=$(find "$DEST" -name "*.md" | wc -l)
 echo "$n markdown files in $DEST"
 echo
 echo "next:"
 echo "  ./eccx corpus build --dir $DEST"
-echo "  ./eccx --corpus $DEST eval --file evals/corpus-fastapi.jsonl --k 20 --json"
+echo "  ./eccx --corpus $DEST vectors            # optional, ~1 min"
+echo "  python3 tools/corpus_report.py --corpus $DEST --queries evals/corpus-$WHICH.jsonl"

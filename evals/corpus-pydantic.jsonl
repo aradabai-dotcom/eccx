@@ -1,0 +1,60 @@
+{"q": "my field validator runs even when the value was never provided", "expect": ["concepts:concepts/validators", "api:api/fields"]}
+{"q": "the error message says the model is not valid but not which field", "expect": ["errors:errors/validation_errors", "errors:errors/errors"]}
+{"q": "I want a model that behaves like a dict and only holds one value", "expect": ["concepts:concepts/models", "api:api/root_model"]}
+{"q": "serialisation drops the computed field to json", "expect": ["concepts:concepts/serialization", "api:api/fields"]}
+{"q": "an alias in the input json does not populate the python attribute", "expect": ["concepts:concepts/alias", "api:api/aliases"]}
+{"q": "I want to forbid unknown keys coming from an external api", "expect": ["concepts:concepts/config", "api:api/config"]}
+{"q": "the same model needs different behaviour in tests than in production", "expect": ["concepts:concepts/config", "api:api/config"]}
+{"q": "validation takes 40 percent of the request time and I need it faster", "expect": ["concepts:concepts/performance"]}
+{"q": "a list of strings is silently coerced from one comma separated string", "expect": ["concepts:concepts/conversion_table", "concepts:concepts/strict_mode"]}
+{"q": "I want no coercion at all, an int must be an int", "expect": ["concepts:concepts/strict_mode"]}
+{"q": "two models refer to each other and the import fails", "expect": ["examples:examples/cyclic_references", "concepts:concepts/forward_annotations"]}
+{"q": "I build model classes at runtime from a config file", "expect": ["examples:examples/dynamic_models", "api:api/base_model"]}
+{"q": "I need to load settings from environment variables with types", "expect": ["concepts:concepts/pydantic_settings", "api:api/pydantic_settings"]}
+{"q": "an optional field with a default still fails validation when null", "expect": ["concepts:concepts/fields", "api:api/fields"]}
+{"q": "I want to validate a function argument without declaring a class", "expect": ["api:api/validate_call", "concepts:concepts/validation_decorator"]}
+{"q": "I have a sqlalchemy object and want to build a model from it", "expect": ["examples:examples/orms"]}
+{"q": "the json schema is missing the description of a field", "expect": ["concepts:concepts/json_schema", "api:api/json_schema"]}
+{"q": "I need to send a model to a queue as bytes and read it back", "expect": ["examples:examples/queues"]}
+{"q": "I want to post the model with httpx and let it validate the reply", "expect": ["examples:examples/requests"]}
+{"q": "my custom validator needs the other fields of the model", "expect": ["concepts:concepts/validators", "examples:examples/custom_validators"]}
+{"q": "the before validator receives the raw input but I need the parsed one", "expect": ["concepts:concepts/validators", "api:api/functional_validators"]}
+{"q": "I want a validator that runs on the model after all fields are set", "expect": ["concepts:concepts/validators", "api:api/functional_validators"]}
+{"q": "a custom type from a third party library is rejected as unknown", "expect": ["concepts:concepts/types", "api:api/types"]}
+{"q": "how do I represent a union that tries several shapes in order", "expect": ["concepts:concepts/unions"]}
+{"q": "a datetime in a string keeps its timezone offset when dumped", "expect": ["concepts:concepts/serialization", "api:api/standard_library_types"]}
+{"q": "the validation error is raised two levels below where the bad value is", "expect": ["errors:errors/errors", "errors:errors/troubleshooting"]}
+{"q": "mypy complains about every model I build", "expect": ["integrations:integrations/mypy"]}
+{"q": "I want the editor to autocomplete model fields", "expect": ["integrations:integrations/pycharm", "integrations:integrations/visual_studio_code"]}
+{"q": "generate a model from an openapi specification", "expect": ["integrations:integrations/datamodel_code_generator"]}
+{"q": "I want property based testing on my models with hypothesis", "expect": ["integrations:integrations/hypothesis"]}
+{"q": "I need to read a file into a model", "expect": ["examples:examples/files"]}
+{"q": "the app is deployed as a lambda function and cold start is too slow", "expect": ["integrations:integrations/aws_lambda"]}
+{"q": "I want to convert a whole pandas dataframe or numpy array", "expect": ["api:api/standard_library_types", "concepts:concepts/types"]}
+{"q": "I want to validate json without knowing the class at import time", "expect": ["concepts:concepts/type_adapter", "api:api/type_adapter"]}
+{"q": "the annotated type carries extra metadata for validation", "expect": ["api:api/annotated_handlers", "concepts:concepts/fields"]}
+{"q": "I want the error to be machine readable with a stable code", "expect": ["errors:errors/validation_errors", "api:api/errors"]}
+{"q": "my model prints as a wall of text in the debugger", "expect": ["integrations:integrations/devtools", "integrations:integrations/rich"]}
+{"q": "I need an isbn and a currency code type instead of a plain string", "expect": ["api:api/pydantic_extra_types_isbn", "api:api/pydantic_extra_types_currency_code"]}
+{"q": "a mac address coming as a string should be validated", "expect": ["api:api/pydantic_extra_types_mac_address"]}
+{"q": "I want to reach the tracing backend of my service", "expect": ["integrations:integrations/logfire"]}
+{"q": "I need a semantic version comparison on a field", "expect": ["api:api/pydantic_extra_types_semantic_version"]}
+{"q": "how is the library organised internally if I want to contribute a fix", "expect": ["internals:internals/architecture"]}
+{"q": "forward references to classes defined later in the file", "expect": ["concepts:concepts/forward_annotations", "internals:internals/resolving_annotations"]}
+{"q": "I am migrating from the previous major version and my config class broke", "expect": ["doc:migration"]}
+{"q": "when does a deprecated feature stop working", "expect": ["doc:version-policy"]}
+{"q": "why would I use this instead of dataclasses", "expect": ["doc:why", "concepts:concepts/dataclasses"]}
+{"q": "I want a dataclass that validates too", "expect": ["concepts:concepts/dataclasses", "api:api/dataclasses"]}
+{"q": "how do I install it and check the version I have", "expect": ["doc:install", "api:api/version"]}
+{"q": "my linter and formatter fight over my model definitions", "expect": ["integrations:integrations/linting"]}
+{"q": "I want to feed an llm with the schema of my models", "expect": ["integrations:integrations/llms", "concepts:concepts/json_schema"]}
+{"q": "I need a phone number type that checks the country prefix", "expect": ["api:api/pydantic_extra_types_phone_numbers"]}
+{"q": "the model validation is strict about an integer that arrives as a float", "expect": ["concepts:concepts/strict_mode", "concepts:concepts/conversion_table"]}
+{"q": "I want to hook into serialisation to change the output shape", "expect": ["api:api/functional_serializers", "concepts:concepts/serialization"]}
+{"q": "the nested model keeps the wrong type after assignment", "expect": ["api:api/base_model", "concepts:concepts/models"]}
+{"q": "I need to tell which fields changed after a patch", "expect": ["api:api/fields", "concepts:concepts/fields"]}
+{"q": "the error says the value is not a valid dict and I passed a model", "expect": ["errors:errors/usage_errors", "errors:errors/errors"]}
+{"q": "I want to swap the json encoder for orjson", "expect": ["concepts:concepts/json"]}
+{"q": "how do I get help if I found a security problem", "expect": ["doc:enterprise-support", "doc:help_with_pydantic"]}
+{"q": "I want to annotate the handlers of a custom type with the right signature", "expect": ["api:api/annotated_handlers"]}
+{"q": "can I use a coordinate with latitude and longitude as a field", "expect": ["api:api/pydantic_extra_types_coordinate"]}

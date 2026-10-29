@@ -4961,3 +4961,72 @@ class TestLeanInstall(unittest.TestCase):
         r = run("--corpus", str(d), "index")
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("1 documents", r.stdout)
+
+
+class TestCorpusReport(unittest.TestCase):
+    """The measurement instrument itself.
+
+    Four measurements in this project were wrong, and every one of them was
+    produced by a throwaway harness that had drifted from the product. These
+    tests pin the two properties that make the instrument trustworthy: the arms
+    differ by exactly one boolean, and a query naming a document that is not in
+    the index is refused *before* any number is produced.
+    """
+
+    def setUp(self):
+        import tempfile
+        self.dir = Path(tempfile.mkdtemp())
+        root = self.dir / "notes"
+        (root / "projets").mkdir(parents=True)
+        (root / "projets" / "vpn.md").write_text(
+            "# VPN du bureau\n\n## Coupures\n\nLe tunnel tombe chaque nuit vers trois heures.\n")
+        (root / "projets" / "db.md").write_text(
+            "# Base de donnees\n\n## Lenteur\n\nLe dashboard met quatre secondes a s'afficher.\n")
+        self.root = root
+        self.q = self.dir / "q.jsonl"
+        self.q.write_text(json.dumps({"q": "le tunnel tombe chaque nuit",
+                                      "expect": ["projets/vpn"]}) + "\n")
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_wilson_interval_contains_the_point_estimate(self):
+        from tools.corpus_report import wilson
+        for k, n in ((0, 10), (5, 10), (10, 10), (27, 60)):
+            lo, hi = wilson(k, n)
+            self.assertLessEqual(lo, k / n)
+            self.assertGreaterEqual(hi, k / n)
+
+    def test_mcnemar_counts_only_discordant_pairs(self):
+        from tools.corpus_report import mcnemar
+        a = [True, False, True, False, True]
+        b = [True, True, False, False, True]
+        w, l, p = mcnemar(a, b)
+        self.assertEqual((w, l), (1, 1))
+        self.assertEqual(p, 1.0)
+
+    def test_mcnemar_is_significant_when_every_discordant_pair_agrees(self):
+        from tools.corpus_report import mcnemar
+        a = [False] * 8
+        b = [True] * 8
+        w, l, p = mcnemar(a, b)
+        self.assertEqual((w, l), (8, 0))
+        self.assertLess(p, 0.01)
+
+    def test_a_target_missing_from_the_index_stops_the_run(self):
+        """Silent skipping is how a 60-query set becomes a 59-query set and
+        nobody notices the denominator changed."""
+        import subprocess
+        import sys as _sys
+        # Build through the CLI, exactly as a user would: the state directory
+        # naming lives there, and a test that reimplements it tests the copy.
+        b = run("corpus", "build", "--dir", str(self.root))
+        self.assertEqual(b.returncode, 0, b.stderr)
+        bad = self.dir / "bad.jsonl"
+        bad.write_text(json.dumps({"q": "x", "expect": ["projets/nexistepas"]}) + "\n")
+        r = subprocess.run([_sys.executable, str(ROOT / "tools" / "corpus_report.py"),
+                            "--corpus", str(self.root), "--queries", str(bad)],
+                           capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("nexistepas", r.stderr)
