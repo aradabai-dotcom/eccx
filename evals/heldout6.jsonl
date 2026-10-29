@@ -1,0 +1,40 @@
+{"q": "our nightly job dies halfway and leaves the database inconsistent", "expect": ["skill:database-migrations", "skill:error-handling"]}
+{"q": "the browser shows a blank page and the console says nothing useful", "expect": ["skill:frontend-patterns", "skill:error-handling", "skill:react-patterns"]}
+{"q": "we want to know which customers are affected by the last release", "expect": ["skill:change-impact", "skill:canary-watch"]}
+{"q": "the same piece of logic exists in the web app and in the mobile app", "expect": ["agent:refactor-cleaner", "agent:code-simplifier", "command:refactor-clean"]}
+{"q": "a junior joined and keeps asking where things live in the repository", "expect": ["skill:codebase-onboarding", "skill:code-tour", "agent:code-explorer"]}
+{"q": "we accidentally published an internal document to the public site", "expect": ["skill:docs-governance", "skill:living-docs-governance"]}
+{"q": "the team argues for two days about a technical choice and never writes it down", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions"]}
+{"q": "our docker image builds differently on every machine", "expect": ["skill:docker-patterns", "skill:deployment-patterns"]}
+{"q": "we want a checklist before shipping so nothing obvious is forgotten", "expect": ["command:quality-gate", "skill:verification-loop", "skill:delivery-gate"]}
+{"q": "the model keeps answering with outdated information from its context", "expect": ["skill:context-and-decisions", "skill:context-budget", "skill:knowledge-ops"]}
+{"q": "an endpoint accepts a parameter that lets a user read someone else's data", "expect": ["skill:security-review", "skill:backend-patterns"]}
+{"q": "we need to run the same agent on ten repositories at once", "expect": ["skill:dmux-workflows", "skill:parallel-execution-optimizer", "command:multi-plan"]}
+{"q": "the test suite takes forty minutes so nobody runs it anymore", "expect": ["skill:verification-loop", "skill:e2e-testing", "command:test-coverage"]}
+{"q": "a background process silently stopped and we noticed three days later", "expect": ["skill:canary-watch", "skill:dashboard-builder", "skill:error-handling"]}
+{"q": "we keep copying the same setup from one project to the next", "expect": ["command:project-init", "skill:deployment-patterns"]}
+{"q": "the app is slow on old phones when the list has many items", "expect": ["skill:react-performance", "skill:frontend-patterns"]}
+{"q": "someone deleted a branch on the remote by mistake", "expect": ["skill:git-workflow"]}
+{"q": "we want to compare two versions of the same prompt and see which is better", "expect": ["skill:agent-eval", "skill:benchmark", "skill:prompt-optimizer"]}
+{"q": "the agent edits a file and then cannot find what it just changed", "expect": ["skill:agent-introspection-debugging", "skill:verification-loop"]}
+{"q": "our api returns the internal error message to the end user", "expect": ["skill:error-handling", "skill:security-review"]}
+{"q": "we have no idea how much each feature costs us in tokens", "expect": ["skill:cost-tracking", "skill:cost-aware-llm-pipeline", "skill:ecc-tools-cost-audit"]}
+{"q": "a form loses the user's input when the network fails", "expect": ["skill:frontend-patterns", "skill:error-handling"]}
+{"q": "the translations are out of sync between the english and the arabic files", "expect": ["skill:i18n-sync"]}
+{"q": "we want a second opinion on a diff before merging", "expect": ["command:code-review", "agent:code-reviewer", "command:review-pr"]}
+{"q": "the service handles one request at a time and queues the rest", "expect": ["skill:latency-critical-systems", "skill:backend-patterns", "skill:kubernetes-patterns"]}
+{"q": "a regression shipped because nothing compared the output before and after", "expect": ["skill:ai-regression-testing", "skill:verification-loop", "command:test-coverage"]}
+{"q": "the repository has files nobody has touched in two years", "expect": ["skill:repository-hygiene", "skill:config-gc", "command:prune"]}
+{"q": "we want the agent to ask before it does something irreversible", "expect": ["skill:operator-approval-loop", "skill:safety-guard"]}
+{"q": "two people work on the same feature and step on each other", "expect": ["skill:dmux-workflows", "skill:git-workflow"]}
+{"q": "the logs are full of noise and we cannot find the real failure", "expect": ["skill:dashboard-builder", "skill:canary-watch", "skill:error-handling"]}
+{"q": "we need to migrate a monolith to smaller services without breaking users", "expect": ["skill:hexagonal-architecture", "skill:database-migrations", "skill:deployment-patterns"]}
+{"q": "the same bug came back after we fixed it last month", "expect": ["skill:continuous-learning", "skill:ai-regression-testing", "skill:module-regression"]}
+{"q": "we cannot reproduce what the user did before the crash", "expect": ["skill:error-handling", "skill:canary-watch", "skill:dashboard-builder"]}
+{"q": "the agent runs out of context halfway through a long task", "expect": ["skill:context-budget", "skill:strategic-compact", "skill:token-budget-advisor"]}
+{"q": "we want to know if a library update breaks our code before we merge it", "expect": ["skill:mcp-dependency-review", "command:security-scan", "skill:verification-loop"]}
+{"q": "the same configuration is repeated in five different files", "expect": ["skill:config-gc", "skill:coding-standards"]}
+{"q": "we want a written record of why the system looks like this", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions", "skill:living-docs-governance"]}
+{"q": "a long task is interrupted and we lose all the progress", "expect": ["skill:autonomous-loops", "skill:unified-memory", "skill:continuous-agent-loop"]}
+{"q": "we suspect the model is leaking the name of our internal systems in answers", "expect": ["skill:pii-redaction", "skill:agent-security-hardening"]}
+{"q": "the build passes locally and fails on the server for no visible reason", "expect": ["agent:build-error-resolver", "skill:verification-loop", "skill:docker-patterns"]}

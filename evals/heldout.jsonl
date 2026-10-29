@@ -1,0 +1,30 @@
+{"q": "my production deployment started failing after the last release", "expect": ["agent:build-error-resolver", "command:build-fix", "skill:deployment-patterns"]}
+{"q": "make this function easier to read and maintain", "expect": ["agent:code-simplifier", "command:refactor-clean", "skill:coding-standards"]}
+{"q": "find every place this config flag is used", "expect": ["skill:code-tour", "skill:change-impact", "agent:code-explorer"]}
+{"q": "our tests are slow, make them faster", "expect": ["skill:benchmark-optimization-loop", "rule:common/testing", "skill:e2e-testing"]}
+{"q": "protect user passwords properly", "expect": ["skill:security-review", "agent:security-reviewer", "skill:backend-patterns"]}
+{"q": "add pagination to the users list endpoint", "expect": ["skill:api-design", "skill:backend-patterns"]}
+{"q": "this component re-renders too often", "expect": ["skill:react-performance", "skill:react-patterns"]}
+{"q": "handle a 429 from a third party api gracefully", "expect": ["skill:error-handling", "skill:backend-patterns"]}
+{"q": "keep my docs in sync with the code", "expect": ["command:update-docs", "skill:living-docs-governance", "skill:documentation-lookup"]}
+{"q": "split this big pull request into reviewable pieces", "expect": ["command:review-pr", "skill:git-workflow", "skill:conventional-commit-review"]}
+{"q": "why did this test start failing intermittently", "expect": ["skill:e2e-testing", "skill:python-testing", "agent:e2e-runner"]}
+{"q": "make the agent stop and ask before doing something dangerous", "expect": ["command:hookify", "command:hookify-configure", "skill:agent-security-hardening"]}
+{"q": "we need an audit trail of every model decision", "expect": ["skill:living-docs-governance", "skill:agent-security-hardening", "skill:context-and-decisions"]}
+{"q": "rename a database column without downtime", "expect": ["skill:database-migrations"]}
+{"q": "write a technical design doc for the team", "expect": ["command:plan-prd", "skill:architecture-decision-records", "command:prp-plan"]}
+{"q": "check if my dependencies are up to date and safe", "expect": ["command:security-scan", "skill:security-review"]}
+{"q": "make a flaky e2e test deterministic", "expect": ["skill:e2e-testing", "agent:e2e-runner"]}
+{"q": "reduce docker image size", "expect": ["skill:docker-patterns", "skill:deployment-patterns"]}
+{"q": "the agent keeps using too many tokens", "expect": ["skill:context-budget", "skill:token-card", "skill:cost-tracking"]}
+{"q": "generate unit tests for these untested functions", "expect": ["command:test-coverage", "rule:common/testing", "skill:python-testing"]}
+{"q": "catch typos and unused imports automatically", "expect": ["skill:coding-standards", "command:quality-gate", "rule:common/coding-style"]}
+{"q": "what broke between these two commits", "expect": ["skill:git-workflow", "command:code-review", "agent:commit-reviewer"]}
+{"q": "design a retry strategy with exponential backoff", "expect": ["skill:error-handling", "skill:backend-patterns"]}
+{"q": "store secrets so they never land in the repo", "expect": ["skill:security-review", "skill:backend-patterns"]}
+{"q": "make onboarding easier for new engineers", "expect": ["skill:codebase-onboarding", "command:project-init", "skill:code-tour"]}
+{"q": "review the security of an uploaded file handler", "expect": ["skill:security-review", "agent:security-reviewer"]}
+{"q": "plan the work for a two week feature", "expect": ["command:plan", "command:prp-plan", "command:epic-decompose"]}
+{"q": "keep my coding agent consistent across sessions", "expect": ["skill:context-and-decisions", "skill:continuous-learning", "command:save-session"]}
+{"q": "verify nothing regressed before I ship", "expect": ["skill:verification-loop", "command:quality-gate", "command:test-coverage"]}
+{"q": "automate repetitive cleanup in the codebase", "expect": ["command:refactor-clean", "command:prune", "skill:agentic-engineering"]}

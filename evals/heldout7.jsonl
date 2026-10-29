@@ -1,0 +1,59 @@
+{"q": "the pod runs in production mode but a debug flag we removed last year still leaks the internals", "expect": ["skill:agent-runtime-gateway-smoke-test"]}
+{"q": "our agent answers confidently fifteen times then starts contradicting itself", "expect": ["skill:agent-self-evaluation"]}
+{"q": "the address component initialises before the contract is loaded and renders empty", "expect": ["skill:angular-developer"]}
+{"q": "we store customer names in bengali and some letters come out in the wrong order on screen", "expect": ["agent:bengali-reviewer"]}
+{"q": "my inbox triage marks an invoice from a vendor as spam every single week", "expect": ["agent:chief-of-staff"]}
+{"q": "the comment above this function says it returns null but it throws now", "expect": ["agent:comment-analyzer"]}
+{"q": "the mobile team and the api team disagree about what the field is called", "expect": ["skill:contract-first"]}
+{"q": "we published the same launch announcement and linkedin was angry about the hashtags", "expect": ["skill:crosspost"]}
+{"q": "exporting four hundred million rows takes eleven hours and we need it under one", "expect": ["skill:data-throughput-accelerator"]}
+{"q": "migrations are out of order and django refuses to start after the deploy", "expect": ["agent:django-build-resolver"]}
+{"q": "our toasts fire before the list has been re-fetched so the user sees stale data", "expect": ["skill:motion-patterns"]}
+{"q": "sign here works but the date field lands on top of the signature box", "expect": ["skill:esign-field-placement"]}
+{"q": "we want a small local model on the phone instead of calling the api", "expect": ["skill:foundation-models-on-device"]}
+{"q": "the planner writes a spec but never splits it into sprints we can actually ship", "expect": ["agent:gan-planner"]}
+{"q": "we need the same tracker sheet and deck to stay in sync without copy pasting", "expect": ["skill:google-workspace-ops"]}
+{"q": "the study coordinator cannot open the internal clinic tool from home", "expect": ["skill:homelab-wireguard-vpn"]}
+{"q": "the subagent gets half the context it needs and answers about the wrong file", "expect": ["skill:iterative-retrieval"]}
+{"q": "our ethereum signature check fails in node but passes in the browser", "expect": ["skill:nodejs-keccak256"]}
+{"q": "we are changing a feature that already works and the old tests keep failing", "expect": ["skill:orch-change-feature"]}
+{"q": "our perl test suite passes locally but the ci runner reports a different count", "expect": ["skill:perl-testing"]}
+{"q": "the prisma query does three separate round trips for one page of results", "expect": ["skill:prisma-patterns"]}
+{"q": "training restarts from scratch every time the machine reboots", "expect": ["skill:pytorch-patterns"]}
+{"q": "our rails controllers have grown to nine hundred lines and call the mailer directly", "expect": ["skill:rails-patterns"]}
+{"q": "we parse thousands of receipts a day and the llm call cost is not worth it", "expect": ["skill:regex-vs-llm-structured-text"]}
+{"q": "cargo says the value is borrowed but the borrow ends before the call", "expect": ["agent:rust-build-resolver"]}
+{"q": "the reviewer says our literature review lacks an evidence table", "expect": ["skill:scientific-thinking-scholar-evaluation"]}
+{"q": "the skill works in claude code but cursor rejects the frontmatter", "expect": ["skill:skill-host-compat"]}
+{"q": "our endpoints accept a token signed with the wrong algorithm", "expect": ["skill:springboot-security"]}
+{"q": "we cannot mock the file system because everything is a concrete class", "expect": ["skill:swift-protocol-di-testing"]}
+{"q": "nobody on the team writes the test first and we want it to become the habit", "expect": ["agent:tdd-guide"]}
+{"q": "our services are spread over three hosts and caddy keeps routing to the dead one", "expect": ["skill:uncloud"]}
+{"q": "the ref array is mutated in place and the watcher never fires", "expect": ["agent:vue-reviewer"]}
+{"q": "the webhook arrives twice and we charge the customer twice", "expect": ["skill:agent-payment-x402"]}
+{"q": "we inherited a kubernetes cluster nobody documented and the bills went up", "expect": ["skill:agent-architecture-audit"]}
+{"q": "the email goes out in production but the staging key silently drops it", "expect": ["skill:mailtrap-email-integration"]}
+{"q": "our mcp tool schema accepts anything and the model sends garbage", "expect": ["skill:mcp-server-patterns"]}
+{"q": "we cannot tell whether the agent failed or the model was never called", "expect": ["skill:agent-runtime-gateway-smoke-test"]}
+{"q": "the documentation site still describes the old endpoint names", "expect": ["agent:comment-analyzer"]}
+{"q": "we want llm assisted coding without letting the model edit files blindly", "expect": ["skill:ai-first-engineering"]}
+{"q": "the audit says our assistant has no logging between the layers", "expect": ["skill:agent-architecture-audit"]}
+{"q": "we ship weekly and the release notes are written by whoever remembers", "expect": ["skill:article-writing"]}
+{"q": "the spring project fails to compile after someone bumped the parent version", "expect": ["agent:java-reviewer"]}
+{"q": "our kotlin coroutine swallows the exception and the ui just freezes", "expect": ["skill:kotlin-patterns"]}
+{"q": "deploying to heroku wipes the uploaded files every time", "expect": ["skill:laravel-verification"]}
+{"q": "we need to test emails without sending them to real customers", "expect": ["skill:mailtrap-email-integration"]}
+{"q": "the android screen logic is in the activity and cannot be tested", "expect": ["skill:android-clean-architecture"]}
+{"q": "our three sites share a backbone and the vpn routes loops traffic", "expect": ["agent:network-architect"]}
+{"q": "the c# service leaks a connection because the scope is never disposed", "expect": ["skill:dotnet-patterns"]}
+{"q": "we want to parse a printed form reliably without training a model", "expect": ["skill:regex-vs-llm-structured-text"]}
+{"q": "the reviewer keeps asking us to split the query and the command handlers", "expect": ["skill:contract-first"]}
+{"q": "our python project has a hundred small tasks that each refetch everything", "expect": ["skill:data-throughput-accelerator"]}
+{"q": "the animation looks fine on desktop and stutters on the old phone", "expect": ["skill:motion-patterns"]}
+{"q": "we accidentally deleted the wrong branch and want to stop that happening again", "expect": ["skill:orch-change-feature"]}
+{"q": "the pdf export loses the signature when the document is opened in preview", "expect": ["skill:esign-field-placement"]}
+{"q": "the healthcare screen shows an interaction warning after the dose is already saved", "expect": ["agent:healthcare-reviewer"]}
+{"q": "our llm app has twelve moving parts and we cannot find the slow one", "expect": ["skill:agent-architecture-audit"]}
+{"q": "we want the model to call our internal functions with validated arguments", "expect": ["skill:mcp-server-patterns"]}
+{"q": "the chat bot and the slack bot answer differently to the same question", "expect": ["skill:agent-self-evaluation"]}
+{"q": "our spreadsheet macro fetches a page per row and takes minutes", "expect": ["skill:google-workspace-ops"]}

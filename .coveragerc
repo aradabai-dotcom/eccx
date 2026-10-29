@@ -1,0 +1,30 @@
+# Coverage configuration — the gate in run-checks.sh reads this file.
+#
+# Two decisions, both load-bearing:
+#   * `branch = True` — a line covered on only one arm of an `if` is not
+#     covered; line-only coverage reports 100% for code that never takes its
+#     error path.
+#   * `parallel = True` + tools/cov_boot/sitecustomize.py — most of cli.py runs
+#     in child processes; without per-process data files and `coverage combine`,
+#     the CLI reports ~8% and the number lies.
+[run]
+source = eccxlib
+branch = True
+parallel = True
+omit =
+    */tests/*
+    tools/*
+
+[report]
+# Exclusions must be justified, not convenient. Only these three:
+#   noqa / pragma          -> explicit, reviewed opt-outs
+#   NotImplementedError    -> abstract methods
+#   if TYPE_CHECKING       -> never executed at runtime by definition
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError
+
+precision = 0
+show_missing = True
+skip_covered = False

@@ -1,0 +1,22 @@
+{"q": "our flutter screen rebuilds the whole list on every frame", "expect": ["skill:flutter-dart-code-review"]}
+{"q": "the same test fails about one run in twenty and never on my laptop", "expect": ["skill:test-collaboration"]}
+{"q": "we need to record why we picked kafka over rabbitmq before everyone forgets", "expect": ["skill:architecture-decision-records"]}
+{"q": "the agent calls the same tool over and over and burns the budget", "expect": ["skill:autonomous-loops"]}
+{"q": "nobody can read our git history, the commit messages say fix stuff", "expect": ["skill:conventional-commit-review"]}
+{"q": "the docker image we ship is three gigabytes", "expect": ["skill:docker-patterns"]}
+{"q": "how should I lay out a fastapi service with shared dependencies", "expect": ["skill:fastapi-patterns"]}
+{"q": "our error messages say null pointer instead of what the user should do", "expect": ["skill:error-handling"]}
+{"q": "a react table with ten thousand rows freezes the browser", "expect": ["skill:react-performance"]}
+{"q": "the model sometimes writes the api key into the log file", "expect": ["skill:agent-security-hardening"]}
+{"q": "review this pull request for security problems before we ship", "expect": ["skill:security-review"]}
+{"q": "we keep rediscovering the same bug pattern every few weeks", "expect": ["skill:continuous-learning"]}
+{"q": "our rust code has unsafe blocks nobody has looked at", "expect": ["skill:rust-testing"]}
+{"q": "the go service leaks goroutines when a request times out", "expect": ["skill:golang-testing"]}
+{"q": "write down the plan and the trade-offs for this feature first", "expect": ["skill:plan-canvas"]}
+{"q": "the python tests take eleven minutes and we skip them locally", "expect": ["skill:python-testing"]}
+{"q": "the agent forgot what we decided two sessions ago", "expect": ["skill:unified-memory"]}
+{"q": "our docs are stale the day after we write them", "expect": ["skill:docs-governance"]}
+{"q": "someone pushed a credential into the repository history", "expect": ["skill:security-scan"]}
+{"q": "I need to compare two language models on our own tasks", "expect": ["skill:council-multi-model"]}
+{"q": "the endpoint returns five hundred when the payload is too large", "expect": ["skill:api-design"]}
+{"q": "set up the github actions workflow to run on every pull request", "expect": ["skill:github-ops"]}

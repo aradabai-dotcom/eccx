@@ -1,0 +1,12 @@
+{"q": "strip customer emails and phone numbers before they reach the model provider", "expect": ["skill:pii-redaction", "skill:agent-security-hardening"]}
+{"q": "our git clone takes 20 minutes because of committed binaries", "expect": ["skill:repository-hygiene", "skill:config-gc"]}
+{"q": "this 800 line controller does everything, split it up", "expect": ["skill:large-file-decomposition", "agent:code-simplifier"]}
+{"q": "the assistant quoted a real customer name back to me", "expect": ["skill:pii-redaction", "skill:agent-security-hardening"]}
+{"q": "we have 2GB of old assets in history nobody needs", "expect": ["skill:repository-hygiene"]}
+{"q": "one function is 400 lines and nobody dares touch it", "expect": ["skill:large-file-decomposition", "agent:code-simplifier"]}
+{"q": "add database indexes so the users query stops timing out", "expect": ["skill:database-migrations", "skill:postgres-patterns"]}
+{"q": "the test suite takes 40 minutes, cut it down", "expect": ["skill:benchmark-optimization-loop", "skill:e2e-testing"]}
+{"q": "a dependency has a critical CVE, what now", "expect": ["command:security-scan", "skill:security-review"]}
+{"q": "make the CLI fail loudly instead of silently doing nothing", "expect": ["skill:error-handling", "skill:backend-patterns"]}
+{"q": "document the on-call runbook for this service", "expect": ["command:update-docs", "skill:living-docs-governance"]}
+{"q": "our PRs sit unreviewed for days", "expect": ["skill:git-workflow", "command:review-pr", "skill:project-flow-ops"]}

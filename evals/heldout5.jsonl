@@ -1,0 +1,31 @@
+{"q": "our queries got slow after the table passed ten million rows", "expect": ["skill:postgres-patterns", "skill:database-migrations"]}
+{"q": "the image we build is two gigabytes and the pipeline takes forty minutes", "expect": ["skill:docker-patterns", "skill:deployment-patterns"]}
+{"q": "the pod keeps restarting and the last state says it was killed for memory", "expect": ["skill:kubernetes-patterns", "skill:deployment-patterns"]}
+{"q": "tests pass on my laptop but fail in the pipeline every second run", "expect": ["skill:python-testing", "skill:verification-loop", "skill:cpp-testing"]}
+{"q": "how should I lay out the folders for a new feature in our react app", "expect": ["skill:react-patterns", "skill:frontend-patterns"]}
+{"q": "someone force pushed over a branch and the work is gone", "expect": ["skill:git-workflow"]}
+{"q": "we need to add roles and permissions so users only see their own data", "expect": ["skill:backend-patterns", "skill:security-review", "skill:django-security"]}
+{"q": "the cache keeps growing until the server runs out of memory", "expect": ["skill:redis-patterns", "skill:content-hash-cache-pattern"]}
+{"q": "make the checkout page usable for someone who cannot see it", "expect": ["skill:accessibility", "skill:frontend-a11y"]}
+{"q": "we are choosing between two architectures and nobody remembers why we picked this one", "expect": ["skill:architecture-decision-records", "command:plan-canvas"]}
+{"q": "block the merge if a secret is about to be committed", "expect": ["command:security-scan", "skill:security-scan", "skill:safety-guard"]}
+{"q": "the agent keeps working after it already finished the task and burns money", "expect": ["skill:autonomous-loops", "skill:cost-aware-llm-pipeline", "skill:token-budget-advisor"]}
+{"q": "the documentation on the wiki no longer matches the code", "expect": ["skill:living-docs-governance", "skill:docs-governance", "command:update-docs"]}
+{"q": "click through the signup flow in a real browser after every deploy", "expect": ["skill:e2e-testing", "skill:browser-qa"]}
+{"q": "the migration locks the table and the site is down for forty minutes", "expect": ["skill:database-migrations", "skill:postgres-patterns"]}
+{"q": "we are about to start a large feature and want the design agreed before coding", "expect": ["skill:plan-canvas", "skill:plan-orchestrate", "command:plan-prd"]}
+{"q": "the code works but it is unreadable and nobody wants to touch it", "expect": ["skill:coding-standards", "agent:code-simplifier", "command:refactor-clean"]}
+{"q": "where is this environment variable actually read from", "expect": ["skill:code-tour", "skill:change-impact", "agent:code-explorer"]}
+{"q": "our api returns a bare 500 and the client cannot tell what went wrong", "expect": ["skill:error-handling", "skill:backend-patterns"]}
+{"q": "we need the app available in arabic and french without breaking the layouts", "expect": ["skill:i18n-sync", "skill:frontend-patterns"]}
+{"q": "main is red and nobody can tell which change broke it", "expect": ["agent:build-error-resolver", "skill:verification-loop", "command:quality-gate"]}
+{"q": "stop the model from putting customer names and emails into its answers", "expect": ["skill:pii-redaction", "skill:agent-security-hardening", "skill:hipaa-compliance"]}
+{"q": "new python service from scratch with tests linting and a pipeline", "expect": ["command:project-init", "skill:python-patterns", "skill:python-testing"]}
+{"q": "the same question gives a slightly different answer every time we ship", "expect": ["skill:ai-regression-testing", "skill:benchmark", "skill:agent-eval"]}
+{"q": "keep the prompt under the context limit when the conversation gets long", "expect": ["skill:context-budget", "skill:strategic-compact", "skill:prompt-caching-strategy"]}
+{"q": "we pay for the same tokens twice on every request", "expect": ["skill:prompt-caching-strategy", "skill:cost-aware-llm-pipeline", "skill:cost-tracking"]}
+{"q": "a teammate and I both edited the same file and one of us lost the changes", "expect": ["skill:dmux-workflows", "skill:safety-guard", "skill:git-workflow"]}
+{"q": "our config files have accumulated years of options nobody uses", "expect": ["skill:config-gc", "skill:repository-hygiene"]}
+{"q": "I joined a project with four hundred files and no idea where to start", "expect": ["skill:codebase-onboarding", "skill:brownfield-retrospective", "skill:code-tour"]}
+{"q": "one component failing takes down the whole page instead of just itself", "expect": ["skill:error-handling", "skill:frontend-patterns", "skill:react-patterns"]}
+{"q": "the language model invents a file path that does not exist and edits nothing", "expect": ["skill:agent-introspection-debugging", "skill:safety-guard", "skill:verification-loop"]}

@@ -1,0 +1,40 @@
+{"q": "the linker says undefined reference to a symbol that clearly exists", "expect": ["agent:cpp-build-resolver"]}
+{"q": "our endpoint returns 500 when the pydantic model rejects a nested payload", "expect": ["agent:fastapi-reviewer"]}
+{"q": "the harmonyos list does not re-render when the array changes", "expect": ["agent:harmonyos-app-resolver"]}
+{"q": "we launch next month and nobody agrees on who we are talking to", "expect": ["agent:marketing-agent"]}
+{"q": "we merged a big pr and want to know what behaviour is actually covered", "expect": ["agent:pr-test-analyzer"]}
+{"q": "the iterator is consumed twice and the second loop is empty", "expect": ["agent:rust-reviewer"]}
+{"q": "we want a second opinion from a different vendor before merging", "expect": ["command:astra-review"]}
+{"q": "the epic description drifts away from the tickets every sprint", "expect": ["command:epic-sync"]}
+{"q": "widget tests pass but the golden file changed after a font bump", "expect": ["command:flutter-test"]}
+{"q": "we keep solving the same problem in every repo and want to carry the lesson over", "expect": ["command:learn"]}
+{"q": "we have a design doc and need a working thing by friday", "expect": ["command:orch-build-mvp"]}
+{"q": "our global settings keep getting overridden by the project ones", "expect": ["command:promote"]}
+{"q": "two models review the code and one keeps approving what the other rejects", "expect": ["command:santa-loop"]}
+{"q": "the new provider integration looks different from every other one we have", "expect": ["skill:api-connector-builder"]}
+{"q": "our copy sounds like the blog and not like how we actually talk", "expect": ["skill:brand-voice"]}
+{"q": "we are about to touch a file that everyone says is untouchable", "expect": ["skill:codehealth-mcp"]}
+{"q": "we need a go or no go decision and the team is split three ways", "expect": ["skill:council"]}
+{"q": "we need a sourced brief on a market before the board meeting on monday", "expect": ["skill:deep-research"]}
+{"q": "our django views are tested through the admin and nothing else", "expect": ["skill:django-tdd"]}
+{"q": "the agent has been running for a week and nobody can pause it", "expect": ["skill:enterprise-agent-ops"]}
+{"q": "property based tests in f# keep shrinking to the same counterexample", "expect": ["skill:fsharp-testing"]}
+{"q": "the prescription screen lets you save a conflicting drug combination", "expect": ["skill:healthcare-emr-patterns"]}
+{"q": "we want to block a command before it runs, not clean up after it", "expect": ["skill:hookify-rules"]}
+{"q": "we need a gpu and a fixed price before we commit", "expect": ["skill:ito-compute"]}
+{"q": "the transaction commits but the row is still locked afterwards", "expect": ["skill:kotlin-exposed-patterns"]}
+{"q": "we have a list of companies and no idea which ones are actually buying", "expect": ["skill:lead-intelligence"]}
+{"q": "we need to know what our three main competitors charge before we price", "expect": ["skill:market-research"]}
+{"q": "the modal stutters on android and the toast disappears too fast", "expect": ["skill:motion-foundations"]}
+{"q": "bgp neighbour flaps every few hours and the routes disappear", "expect": ["skill:network-bgp-diagnostics"]}
+{"q": "we want a feature from blank page to deploy with checks at every step", "expect": ["skill:orch-add-feature"]}
+{"q": "the perl script passes user input straight to the shell", "expect": ["skill:perl-security"]}
+{"q": "the line is down and we need to resequence the rest of the week", "expect": ["skill:production-scheduling"]}
+{"q": "the back button on android exits the app instead of going back", "expect": ["skill:react-native-patterns"]}
+{"q": "every skill repeats the same three warnings and we want them stated once", "expect": ["skill:rules-distill"]}
+{"q": "we want to find the bug that pays before someone else reports it", "expect": ["skill:security-bounty-hunter"]}
+{"q": "our spring services duplicate the same exception mapping in five controllers", "expect": ["skill:springboot-patterns"]}
+{"q": "the beat drops early and the whole edit feels off", "expect": ["skill:taste"]}
+{"q": "the java framework routes are defined in three different files", "expect": ["skill:tinystruct-patterns"]}
+{"q": "the dev server restarts and every environment variable is lost", "expect": ["skill:vite-patterns"]}
+{"q": "the production build works but the preview build resolves the wrong path", "expect": ["skill:vite-patterns"]}

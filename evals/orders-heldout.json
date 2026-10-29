@@ -1,0 +1,136 @@
+{
+ "my production deployment started failing after the last release": [
+  "skill:deployment-patterns",
+  "skill:production-audit",
+  "skill:github-ops",
+  "skill:kubernetes-patterns"
+ ],
+ "make this function easier to read and maintain": [],
+ "find every place this config flag is used": [],
+ "our tests are slow, make them faster": [
+  "skill:benchmark-optimization-loop",
+  "skill:benchmark",
+  "agent:performance-optimizer",
+  "skill:e2e-testing",
+  "rule:common/testing"
+ ],
+ "protect user passwords properly": [
+  "skill:security-review",
+  "skill:error-handling",
+  "skill:django-security",
+  "skill:springboot-security",
+  "skill:quarkus-security"
+ ],
+ "add pagination to the users list endpoint": [
+  "skill:api-design",
+  "skill:prisma-patterns",
+  "skill:jpa-patterns",
+  "skill:security-review"
+ ],
+ "this component re-renders too often": [
+  "skill:react-performance",
+  "command:react-review",
+  "skill:react-patterns"
+ ],
+ "handle a 429 from a third party api gracefully": [
+  "skill:backend-patterns",
+  "skill:api-design",
+  "skill:api-connector-builder"
+ ],
+ "keep my docs in sync with the code": [
+  "command:update-docs",
+  "skill:living-docs-governance",
+  "skill:docs-governance",
+  "skill:documentation-lookup"
+ ],
+ "split this big pull request into reviewable pieces": [
+  "command:review-pr",
+  "skill:git-workflow",
+  "command:pr",
+  "command:prp-pr",
+  "command:code-review"
+ ],
+ "why did this test start failing intermittently": [
+  "skill:e2e-testing",
+  "skill:ai-regression-testing",
+  "rule:common/testing"
+ ],
+ "make the agent stop and ask before doing something dangerous": [
+  "skill:safety-guard",
+  "skill:agent-security-hardening",
+  "skill:hookify-rules",
+  "skill:agent-architecture-audit"
+ ],
+ "we need an audit trail of every model decision": [
+  "skill:context-and-decisions",
+  "skill:architecture-decision-records",
+  "skill:recursive-decision-ledger",
+  "skill:agent-architecture-audit"
+ ],
+ "rename a database column without downtime": [
+  "skill:database-migrations",
+  "skill:change-impact",
+  "agent:database-reviewer"
+ ],
+ "write a technical design doc for the team": [],
+ "check if my dependencies are up to date and safe": [],
+ "make a flaky e2e test deterministic": [
+  "skill:e2e-testing",
+  "agent:e2e-runner",
+  "skill:ai-regression-testing"
+ ],
+ "reduce docker image size": [
+  "skill:docker-patterns",
+  "skill:deployment-patterns"
+ ],
+ "the agent keeps using too many tokens": [
+  "skill:token-card",
+  "skill:token-budget-advisor",
+  "command:token-card"
+ ],
+ "generate unit tests for these untested functions": [
+  "command:test-coverage",
+  "skill:tdd-workflow",
+  "skill:test-collaboration"
+ ],
+ "catch typos and unused imports automatically": [],
+ "what broke between these two commits": [
+  "agent:commit-reviewer",
+  "skill:git-workflow",
+  "skill:conventional-commit-review"
+ ],
+ "design a retry strategy with exponential backoff": [
+  "skill:error-handling",
+  "skill:backend-patterns",
+  "skill:api-design"
+ ],
+ "store secrets so they never land in the repo": [
+  "skill:security-review",
+  "skill:repo-scan"
+ ],
+ "make onboarding easier for new engineers": [
+  "skill:codebase-onboarding",
+  "command:project-init",
+  "skill:code-tour"
+ ],
+ "review the security of an uploaded file handler": [
+  "skill:security-review",
+  "agent:security-reviewer"
+ ],
+ "plan the work for a two week feature": [
+  "command:plan",
+  "command:prp-plan",
+  "command:feature-dev"
+ ],
+ "keep my coding agent consistent across sessions": [
+  "command:save-session",
+  "skill:coding-standards",
+  "command:resume-session"
+ ],
+ "verify nothing regressed before I ship": [],
+ "automate repetitive cleanup in the codebase": [
+  "agent:refactor-cleaner",
+  "skill:config-gc",
+  "command:feature-dev"
+ ]
+}

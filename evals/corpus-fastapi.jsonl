@@ -1,0 +1,40 @@
+{"q": "my endpoint returns 200 but I need it to return 201 with a location header", "expect": ["tutorial:tutorial/response-status-code", "advanced:advanced/additional-status-codes"]}
+{"q": "the response model hides fields I computed and I want them returned anyway", "expect": ["tutorial:tutorial/response-model", "advanced:advanced/additional-responses"]}
+{"q": "my dependency opens a database session and it is never closed when the request fails", "expect": ["tutorial:tutorial/dependencies/dependencies-with-yield"]}
+{"q": "adding a scheduler in startup runs twice when I start several workers", "expect": ["advanced:advanced/events", "deployment:deployment/server-workers"]}
+{"q": "behind nginx the generated docs say http and the redirect urls are wrong", "expect": ["advanced:advanced/behind-a-proxy"]}
+{"q": "I need to test a websocket endpoint inside pytest", "expect": ["advanced:advanced/testing-websockets", "tutorial:tutorial/testing"]}
+{"q": "the background job cannot use the database session because it closed first", "expect": ["tutorial:tutorial/background-tasks"]}
+{"q": "I want to send a csv file as a download instead of json", "expect": ["advanced:advanced/custom-response", "reference:reference/responses"]}
+{"q": "a float comes back as 1.0 and I lose precision, I want it as a string", "expect": ["tutorial:tutorial/extra-data-types", "tutorial:tutorial/encoder"]}
+{"q": "in tests I want to replace a dependency with a fake user instead of hitting the database", "expect": ["advanced:advanced/testing-dependencies"]}
+{"q": "the app is mounted under a prefix and the docs page cannot find its assets", "expect": ["advanced:advanced/sub-applications", "advanced:advanced/behind-a-proxy"]}
+{"q": "I need to stream a big export without holding it all in memory", "expect": ["advanced:advanced/stream-data"]}
+{"q": "any token reaches my admin endpoint because the scopes are never checked", "expect": ["advanced:advanced/security/oauth2-scopes"]}
+{"q": "I want to read configuration from environment variables and validate it at startup", "expect": ["advanced:advanced/settings"]}
+{"q": "my custom exception turns into a 500 and the message is lost", "expect": ["tutorial:tutorial/handling-errors", "reference:reference/exceptions"]}
+{"q": "the uploaded file is written to disk and I lose the original filename", "expect": ["reference:reference/uploadfile"]}
+{"q": "two routers with the same path prefix shadow each other", "expect": ["tutorial:tutorial/bigger-applications", "how-to:how-to/custom-request-and-route"]}
+{"q": "I need the raw request object inside a dependency to read the client ip", "expect": ["advanced:advanced/using-request-directly", "reference:reference/request"]}
+{"q": "the websocket disconnects right after the handshake completes", "expect": ["advanced:advanced/websockets", "reference:reference/websockets"]}
+{"q": "I want to push server sent events to the browser from an endpoint", "expect": ["reference:reference/sse"]}
+{"q": "our firewall blocks the cdn so the api docs render blank", "expect": ["how-to:how-to/custom-docs-ui-assets"]}
+{"q": "I want the interactive documentation page disabled on the production server", "expect": ["how-to:how-to/conditional-openapi"]}
+{"q": "the test client cannot see a database session that the request created", "expect": ["how-to:how-to/testing-database"]}
+{"q": "the docker image is huge and every build reinstalls all dependencies", "expect": ["deployment:deployment/docker"]}
+{"q": "workers time out under load and I do not know how many to run", "expect": ["deployment:deployment/server-workers", "deployment:deployment/concepts"]}
+{"q": "after upgrading, the old Config inner class no longer works", "expect": ["how-to:how-to/migrate-from-pydantic-v1-to-pydantic-v2"]}
+{"q": "I want a custom header on every single response", "expect": ["advanced:advanced/response-headers"]}
+{"q": "the same model appears twice in the schema, once for input and once for output", "expect": ["how-to:how-to/separate-openapi-schemas"]}
+{"q": "I need to add a second response shape to the openapi schema for the same endpoint", "expect": ["advanced:advanced/additional-responses"]}
+{"q": "I want to know why this framework exists before choosing it over flask", "expect": ["doc:alternatives", "doc:features"]}
+{"q": "the app crashes on boot and I cannot see the traceback", "expect": ["tutorial:tutorial/debugging"]}
+{"q": "I want to mount a flask app inside my async application", "expect": ["advanced:advanced/wsgi"]}
+{"q": "how do I run a single file app locally with reload", "expect": ["doc:fastapi-cli", "deployment:deployment/manually"]}
+{"q": "I want to swap jinja templates in and return html instead of json", "expect": ["advanced:advanced/templates", "reference:reference/templating"]}
+{"q": "I need to attach metadata to the router so the docs group endpoints together", "expect": ["reference:reference/apirouter", "tutorial:tutorial/bigger-applications"]}
+{"q": "the json encoder fails on a datetime inside a set", "expect": ["reference:reference/encoders", "tutorial:tutorial/encoder"]}
+{"q": "I need to trace requests across services with spans", "expect": ["advanced:advanced/opentelemetry"]}
+{"q": "I want the client to be notified about events on my server", "expect": ["advanced:advanced/openapi-webhooks", "advanced:advanced/openapi-callbacks"]}
+{"q": "my middleware runs twice on every request", "expect": ["advanced:advanced/middleware", "reference:reference/middleware"]}
+{"q": "I need to send bytes as base64 in the json payload", "expect": ["advanced:advanced/json-base64-bytes"]}

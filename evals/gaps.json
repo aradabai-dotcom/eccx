@@ -1,0 +1,23 @@
+[
+  {
+    "id": "repository-weight",
+    "query": "our repo is 4GB and cloning takes forever",
+    "expect": ["skill:repository-hygiene"],
+    "claimed": true,
+    "why": "Aucun composant ECC ne traitait le poids d'un dépôt. Écrit avant l'existence du skill : il gagne sur une formulation jamais vue."
+  },
+  {
+    "id": "file-decomposition",
+    "query": "this single file is 600 lines and nobody dares touch it",
+    "expect": ["skill:large-file-decomposition"],
+    "claimed": true,
+    "why": "ECC avait des règles de style et des agents de refactor, mais aucun protocole de découpage de fichier mesuré étape par étape."
+  },
+  {
+    "id": "pii-redaction",
+    "query": "make sure the model never sees the customer's real email",
+    "expect": ["skill:pii-redaction"],
+    "claimed": false,
+    "why": "Livré mais NON revendiqué : perd contre `email-ops` (le mot « email » attire). Échec de routage, pas de couverture — `agent-security-hardening` traite déjà le sujet. Corriger demanderait de régler le routeur sur l'éval de test."
+  }
+]

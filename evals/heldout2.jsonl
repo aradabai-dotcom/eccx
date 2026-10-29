@@ -1,0 +1,30 @@
+{"q": "our nightly job sometimes dies halfway and we lose the batch", "expect": ["skill:error-handling", "skill:backend-patterns", "skill:database-migrations"]}
+{"q": "someone pushed straight to main and broke the build", "expect": ["skill:git-workflow", "agent:build-error-resolver", "skill:verification-loop"]}
+{"q": "I inherited a repo with zero tests and no docs", "expect": ["skill:codebase-onboarding", "command:project-init", "skill:brownfield-retrospective"]}
+{"q": "the same bug keeps coming back every few sprints", "expect": ["skill:verification-loop", "skill:ai-regression-testing", "agent:e2e-runner"]}
+{"q": "make sure the model never sees the customer's real email", "expect": ["skill:security-review", "skill:agent-security-hardening", "skill:healthcare-phi-compliance"]}
+{"q": "the repo is 4GB and cloning takes forever", "expect": ["skill:repository-hygiene", "command:prune", "agent:refactor-cleaner"]}
+{"q": "two agents edited the same file and clobbered each other", "expect": ["skill:dmux-workflows", "skill:safety-guard", "command:multi-plan"]}
+{"q": "everyone writes commits differently and the history is a mess", "expect": ["skill:git-workflow", "skill:conventional-commit-review", "agent:commit-reviewer"]}
+{"q": "our prompts drifted and the bot answers differently every week", "expect": ["skill:inherit-legacy-style", "skill:prompt-optimizer", "skill:eval-harness"]}
+{"q": "I need to know what changed in behaviour without reading 400 files", "expect": ["skill:change-impact", "skill:code-tour", "agent:code-explorer"]}
+{"q": "the API returns 500 when the upstream is down", "expect": ["skill:error-handling", "skill:backend-patterns", "skill:api-design"]}
+{"q": "make the build deterministic so CI stops flaking", "expect": ["skill:verification-loop", "skill:deployment-patterns", "skill:flox-environments"]}
+{"q": "there is duplicated logic in three services", "expect": ["agent:refactor-cleaner", "command:refactor-clean", "agent:code-simplifier"]}
+{"q": "I want a written record of why we chose postgres", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions"]}
+{"q": "estimate how long this migration will take before we start", "expect": ["command:plan", "skill:database-migrations", "command:prp-plan"]}
+{"q": "the agent burned 40 dollars in one session", "expect": ["skill:cost-tracking", "skill:context-budget", "skill:ecc-tools-cost-audit"]}
+{"q": "review my colleague's branch before it lands", "expect": ["command:review-pr", "command:code-review", "agent:code-reviewer"]}
+{"q": "types are wrong everywhere after the framework upgrade", "expect": ["agent:type-design-analyzer", "skill:coding-standards", "agent:typescript-reviewer"]}
+{"q": "I keep re-explaining the project context to the assistant", "expect": ["skill:context-and-decisions", "skill:continuous-learning", "command:save-session"]}
+{"q": "we are about to open source this internal tool", "expect": ["agent:opensource-sanitizer", "skill:opensource-pipeline", "agent:opensource-packager"]}
+{"q": "stop the assistant from running destructive shell commands", "expect": ["skill:safety-guard", "command:hookify", "skill:agent-security-hardening"]}
+{"q": "the whole team's IDE settings keep fighting each other", "expect": ["skill:coding-standards", "skill:config-gc", "rule:common/coding-style"]}
+{"q": "turn this 600 line file into something reviewable", "expect": ["skill:large-file-decomposition", "agent:code-simplifier", "command:refactor-clean", "agent:code-reviewer"]}
+{"q": "nobody knows which of the 30 skills we actually use", "expect": ["command:skill-health", "command:harness-audit", "skill:agent-sort"]}
+{"q": "I want tests that fail when the behaviour changes, not when I rename things", "expect": ["skill:ai-regression-testing", "skill:tdd-workflow", "rule:common/testing"]}
+{"q": "the docs say one thing and the code does another", "expect": ["command:update-docs", "skill:living-docs-governance", "skill:docs-governance"]}
+{"q": "our error messages leak stack traces to users", "expect": ["skill:security-review", "skill:error-handling", "agent:security-reviewer"]}
+{"q": "plan the rollout so we can roll back in one step", "expect": ["skill:deployment-patterns", "command:plan", "skill:canary-watch"]}
+{"q": "I spend more time fighting the harness than writing code", "expect": ["skill:agent-harness-construction", "command:harness-audit", "skill:configure-ecc"]}
+{"q": "prove the refactor changed nothing observable", "expect": ["skill:verification-loop", "skill:santa-method", "command:quality-gate"]}

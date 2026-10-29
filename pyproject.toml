@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eccx"
+version = "0.1.0"
+description = "Route a symptom to the right component of a large Claude Code catalogue, for a token budget."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+# numpy is the only hard dependency: the lexical router and the evaluator work
+# with nothing else installed. fastembed is optional on purpose — routing 8
+# points worse beats refusing to run because a 130 MB model is missing.
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+semantic = ["fastembed>=0.4"]
+dev = ["pytest", "mutmut>=3"]
+
+[project.scripts]
+eccx = "eccxlib.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["eccxlib*"]
+
+# Mutation-testing configuration (mutmut 3.x) — see tools/mutate.sh.
+#
+# Scope is deliberately narrow. With 2 vCPU and a 1 GB sandbox, mutating all
+# 2 300 statements would take hours of wall clock and produce a number nobody
+# would re-run. We mutate the three modules where a silent bug is expensive and
+# where the killing tests are fast:
+#   util.py      stemming/tokenisation — a bug here is lost recall, invisible
+#   rerank.py    the trust rules (projection, coverage, cascade)
+#   evaluate.py  the metrics themselves — a broken metric flatters everything
+[tool.mutmut]
+source_paths = ["eccxlib"]
+# Every module the product actually ships through. The first pass covered only
+# util/rerank/evaluate, which meant the *router* — the code that ranks — was
+# never mutated: a 72 % score on support code says nothing about the product.
+only_mutate = [
+    "eccxlib/util.py",
+    "eccxlib/rerank.py",
+    "eccxlib/evaluate.py",
+    "eccxlib/router.py",
+    "eccxlib/indexer.py",
+]
+# Selection = the fast tests only. The subprocess-driven CLI tests take 100 s
+# and would dominate the budget without killing more mutants.
+pytest_add_cli_args_test_selection = [
+    "tests/test_eccx.py",
+    "-k", "TestStemmerInvariants or TestUtilHelpers or TestFrontmatterParsing or TestRerank or TestEvaluateReporting or TestRouterInternals or TestExpandInternals or TestIndexerStats or TestMetricArithmetic or TestGateBoundaries or TestApplyOrderRules or TestJsonHelpers or TestDocFileResolution or TestResolveMetadata or TestEvaluateRunPaths or TestRerankCachePersistence or TestPublicContracts or TestIndexerBuild or TestProjectDetection or TestRerankInternals or TestRouterHelpers or TestOverlapGuard or TestIndexLoadContract or TestRerankCacheKey or TestRerankCacheIO or TestCardAndTruncateBudgets or TestIndexerStats or TestSuggestRules or TestScoreArithmetic or TestScoreModifiers or TestSectionScoring or TestRenderBundle or TestDurability or TestScoringIsPinned or TestBudgetIsAHardPromise or TestResolveCascade or TestEvaluateRun",
+    "-p", "no:cacheprovider",
+]
+pytest_add_cli_args = ["-x", "-q", "--no-header", "-p", "no:cacheprovider"]
+# The mutant tree is a copy: anything the tests read at runtime must be copied
+# too, or the stats run fails before a single mutant is tested.
+# `evals/` added when `TestEvaluateRun` landed: it loads routing.jsonl at
+# class setup, and a missing file aborts the whole stats run.
+also_copy = ["skills-local", "evals"]
+max_children = 2
+timeout_multiplier = 5.0
+timeout_constant = 2.0

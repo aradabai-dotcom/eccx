@@ -1,0 +1,151 @@
+{
+ "our nightly job sometimes dies halfway and we lose the batch": [
+  "skill:database-migrations",
+  "skill:loop-design-check",
+  "skill:autonomous-loops"
+ ],
+ "someone pushed straight to main and broke the build": [
+  "agent:build-error-resolver",
+  "command:build-fix",
+  "command:pr",
+  "skill:safety-guard"
+ ],
+ "I inherited a repo with zero tests and no docs": [
+  "skill:codebase-onboarding",
+  "skill:brownfield-retrospective",
+  "command:test-coverage",
+  "skill:inherit-legacy-style",
+  "skill:ai-regression-testing"
+ ],
+ "the same bug keeps coming back every few sprints": [
+  "skill:ai-regression-testing",
+  "skill:orch-fix-defect",
+  "skill:tdd-workflow",
+  "skill:test-collaboration",
+  "skill:story-lifecycle"
+ ],
+ "make sure the model never sees the customer's real email": [],
+ "the repo is 4GB and cloning takes forever": [],
+ "two agents edited the same file and clobbered each other": [],
+ "everyone writes commits differently and the history is a mess": [
+  "skill:conventional-commit-review",
+  "skill:git-workflow",
+  "agent:commit-reviewer",
+  "command:prp-commit"
+ ],
+ "our prompts drifted and the bot answers differently every week": [
+  "skill:prompt-optimizer",
+  "skill:inherit-legacy-style",
+  "skill:prompt-caching-strategy",
+  "skill:brownfield-retrospective"
+ ],
+ "I need to know what changed in behaviour without reading 400 files": [],
+ "the API returns 500 when the upstream is down": [
+  "skill:backend-patterns",
+  "skill:api-design",
+  "skill:api-connector-builder",
+  "skill:prisma-patterns"
+ ],
+ "make the build deterministic so CI stops flaking": [
+  "skill:deployment-patterns",
+  "agent:build-error-resolver",
+  "command:build-fix",
+  "skill:orch-pipeline"
+ ],
+ "there is duplicated logic in three services": [
+  "agent:refactor-cleaner",
+  "skill:hexagonal-architecture",
+  "command:multi-backend"
+ ],
+ "I want a written record of why we chose postgres": [
+  "skill:architecture-decision-records",
+  "skill:context-and-decisions",
+  "skill:postgres-patterns"
+ ],
+ "estimate how long this migration will take before we start": [
+  "skill:database-migrations",
+  "skill:change-impact",
+  "agent:database-reviewer"
+ ],
+ "the agent burned 40 dollars in one session": [
+  "skill:ecc-tools-cost-audit",
+  "skill:agent-architecture-audit",
+  "skill:autonomous-agent-harness",
+  "skill:team-agent-orchestration"
+ ],
+ "review my colleague's branch before it lands": [
+  "command:code-review",
+  "agent:code-reviewer",
+  "command:orch-review",
+  "command:astra-review",
+  "skill:conventional-commit-review"
+ ],
+ "types are wrong everywhere after the framework upgrade": [
+  "agent:type-design-analyzer",
+  "skill:coding-standards",
+  "skill:verification-loop"
+ ],
+ "I keep re-explaining the project context to the assistant": [
+  "skill:context-and-decisions",
+  "skill:ck",
+  "skill:unified-memory",
+  "skill:context-budget",
+  "command:project-init"
+ ],
+ "we are about to open source this internal tool": [
+  "agent:opensource-sanitizer",
+  "skill:opensource-pipeline",
+  "agent:opensource-packager",
+  "agent:opensource-forker"
+ ],
+ "stop the assistant from running destructive shell commands": [
+  "skill:safety-guard",
+  "skill:hookify-rules",
+  "skill:gateguard",
+  "skill:recursive-decision-ledger"
+ ],
+ "the whole team's IDE settings keep fighting each other": [],
+ "turn this 600 line file into something reviewable": [],
+ "nobody knows which of the 30 skills we actually use": [
+  "command:skill-health",
+  "skill:agent-sort",
+  "skill:skill-comply",
+  "skill:automation-audit-ops"
+ ],
+ "I want tests that fail when the behaviour changes, not when I rename things": [
+  "skill:ai-regression-testing",
+  "skill:eval-harness",
+  "command:test-coverage",
+  "skill:tdd-workflow",
+  "agent:pr-test-analyzer"
+ ],
+ "the docs say one thing and the code does another": [
+  "command:update-docs",
+  "skill:living-docs-governance",
+  "skill:docs-governance",
+  "skill:code-tour"
+ ],
+ "our error messages leak stack traces to users": [
+  "skill:error-handling",
+  "skill:messages-ops",
+  "skill:healthcare-phi-compliance"
+ ],
+ "plan the rollout so we can roll back in one step": [
+  "command:plan",
+  "skill:change-impact",
+  "command:prp-plan",
+  "command:multi-plan"
+ ],
+ "I spend more time fighting the harness than writing code": [
+  "skill:agent-harness-construction",
+  "agent:harness-optimizer",
+  "command:harness-audit",
+  "skill:configure-ecc"
+ ],
+ "prove the refactor changed nothing observable": [
+  "skill:verification-loop",
+  "skill:orch-refine-code",
+  "command:refactor-clean",
+  "agent:refactor-cleaner"
+ ]
+}

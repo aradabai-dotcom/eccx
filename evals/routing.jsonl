@@ -1,0 +1,50 @@
+{"q": "review my uncommitted changes before I commit", "expect": ["command:code-review", "agent:code-reviewer", "skill:git-workflow"], "why": "local review path"}
+{"q": "review pull request 412", "expect": ["command:review-pr", "command:prp-pr", "command:code-review"], "why": "PR mode"}
+{"q": "check my code for security vulnerabilities", "expect": ["skill:security-review", "agent:security-reviewer"], "why": "generic security"}
+{"q": "add authentication with JWT to my express endpoints", "expect": ["skill:security-review", "skill:backend-patterns", "skill:api-design"], "why": "auth + api"}
+{"q": "write a conventional commit message", "expect": ["skill:conventional-commit-review", "agent:commit-reviewer", "command:prp-commit"], "why": "commit msg"}
+{"q": "onboard myself into this legacy codebase", "expect": ["skill:codebase-onboarding", "skill:inherit-legacy-style", "command:project-init"], "why": "onboarding"}
+{"q": "debug a flaky pytest test", "expect": ["skill:python-testing", "skill:e2e-testing", "agent:e2e-runner"], "why": "python testing"}
+{"q": "write tests for my react components", "expect": ["skill:react-testing", "command:react-test"], "why": "react testing"}
+{"q": "improve react render performance", "expect": ["skill:react-performance", "skill:react-patterns"], "why": "react perf"}
+{"q": "design a REST API with pagination and rate limiting", "expect": ["skill:api-design", "skill:backend-patterns"], "why": "api design"}
+{"q": "set up database migrations safely", "expect": ["skill:database-migrations"], "why": "migrations"}
+{"q": "write an architecture decision record", "expect": ["skill:architecture-decision-records"], "why": "ADR"}
+{"q": "plan a new feature end to end", "expect": ["command:plan", "command:feature-dev", "command:orch-add-feature"], "why": "planning"}
+{"q": "fix a failing docker build", "expect": ["skill:docker-patterns", "command:build-fix"], "why": "build failure"}
+{"q": "debug why my go tests fail", "expect": ["command:go-test", "skill:golang-testing", "command:go-build"], "why": "go testing"}
+{"q": "refactor this code to be simpler", "expect": ["command:refactor-clean", "agent:code-simplifier"], "why": "refactor"}
+{"q": "scan dependencies for known vulnerabilities", "expect": ["command:security-scan", "skill:security-review"], "why": "dep scan"}
+{"q": "build a terminal dashboard UI", "expect": ["skill:dashboard-builder", "skill:terminal-opener"], "why": "dashboard"}
+{"q": "scrape data from a website into JSON", "expect": ["skill:data-scraper-agent"], "why": "scraping"}
+{"q": "reduce my token usage and context cost", "expect": ["skill:context-budget", "skill:token-card", "skill:cost-tracking"], "why": "context economy"}
+{"q": "compress the conversation before hitting the context limit", "expect": ["skill:context-budget", "command:checkpoint", "skill:continuous-learning"], "why": "compaction"}
+{"q": "check accessibility of my HTML page", "expect": ["skill:accessibility", "agent:a11y-architect"], "why": "a11y"}
+{"q": "write documentation for this API", "expect": ["skill:documentation-lookup", "command:update-docs"], "why": "docs"}
+{"q": "generate a changelog from git history", "expect": ["skill:git-workflow", "skill:conventional-commit-review"], "why": "changelog"}
+{"q": "set up a CI pipeline on github actions", "expect": ["skill:github-ops", "skill:deployment-patterns"], "why": "CI"}
+{"q": "harden an autonomous agent against prompt injection", "expect": ["skill:agent-security-hardening", "skill:security-review"], "why": "agent security"}
+{"q": "evaluate the quality of my LLM agent", "expect": ["skill:agent-eval", "skill:benchmark-methodology", "skill:benchmark", "agent:agent-evaluator"], "why": "agent eval"}
+{"q": "design an autonomous loop that keeps improving code", "expect": ["skill:autonomous-loops", "skill:continuous-agent-loop", "command:loop-start"], "why": "loops"}
+{"q": "manage an epic with subtasks", "expect": ["command:epic-decompose", "command:epic-claim", "command:epic-review"], "why": "epics"}
+{"q": "write a product requirements document", "expect": ["command:plan-prd", "command:prp-prd"], "why": "PRD"}
+{"q": "check the health of my installed skills", "expect": ["command:skill-health", "command:harness-audit"], "why": "harness audit"}
+{"q": "create a new skill", "expect": ["command:skill-create"], "why": "skill authoring"}
+{"q": "configure a hook that blocks dangerous commands", "expect": ["command:hookify", "command:hookify-configure"], "why": "hook authoring"}
+{"q": "find which library and version I should use from live docs", "expect": ["skill:documentation-lookup", "agent:docs-lookup"], "why": "context7"}
+{"q": "debug a memory leak in a node process", "expect": ["agent:performance-optimizer", "skill:backend-patterns"], "why": "perf debug"}
+{"q": "write SQL for a clickhouse analytics query", "expect": ["skill:clickhouse-io"], "why": "clickhouse"}
+{"q": "review my python code for type errors", "expect": ["command:python-review", "skill:python-patterns"], "why": "python review"}
+{"q": "define coding standards for the team", "expect": ["skill:coding-standards", "rule:common/coding-style"], "why": "standards"}
+{"q": "improve error handling and retries", "expect": ["skill:error-handling", "skill:backend-patterns"], "why": "resilience"}
+{"q": "run a multi agent review of my changes", "expect": ["command:review-pr", "command:orch-review", "command:multi-execute"], "why": "multi-agent"}
+{"q": "track the cost of my LLM calls", "expect": ["skill:cost-tracking", "command:cost-report"], "why": "cost"}
+{"q": "cache responses intelligently to cut API spend", "expect": ["skill:content-hash-cache-pattern", "skill:prompt-caching-strategy", "skill:cost-aware-llm-pipeline"], "why": "caching"}
+{"q": "hand off context to another agent or session", "expect": ["skill:context-and-decisions", "command:save-session", "skill:continuous-learning"], "why": "handoff"}
+{"q": "resume a previous session", "expect": ["command:resume-session", "command:sessions"], "why": "resume"}
+{"q": "plan work in parallel across git worktrees", "expect": ["skill:parallel-execution-optimizer", "skill:dmux-workflows", "command:multi-workflow", "command:multi-plan"], "why": "parallel"}
+{"q": "measure test coverage", "expect": ["command:test-coverage", "rule:common/testing"], "why": "coverage"}
+{"q": "clean up dead code and unused files", "expect": ["command:prune", "command:refactor-clean"], "why": "prune"}
+{"q": "verify my changes actually work before claiming done", "expect": ["skill:verification-loop", "rule:common/testing"], "why": "verification"}
+{"q": "apply my team coding standards", "expect": ["skill:coding-standards", "rule:common/coding-style"], "why": "standards"}
+{"q": "analyze the impact of changing this module", "expect": ["skill:change-impact", "skill:code-tour"], "why": "impact"}

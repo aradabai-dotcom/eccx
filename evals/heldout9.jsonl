@@ -1,0 +1,50 @@
+{"q": "flutter analyse complains about a null check on a type that is never null", "expect": ["agent:dart-build-resolver"]}
+{"q": "we want to know if the new release actually works before a human tries it", "expect": ["agent:gan-evaluator"]}
+{"q": "gradle cannot resolve the dependency after we switched to the bom", "expect": ["agent:java-build-resolver"]}
+{"q": "dns resolves on the server and not on the laptop next to it", "expect": ["agent:network-troubleshooter"]}
+{"q": "our retrieval returns chunks that are the right topic and the wrong answer", "expect": ["agent:rag-pipeline-reviewer"]}
+{"q": "we inherited a service and there is no specification of what it actually does", "expect": ["agent:spec-miner"]}
+{"q": "the destructor frees memory that another thread is still reading", "expect": ["command:cpp-review"]}
+{"q": "our instincts list keeps growing and nothing ever gets promoted", "expect": ["command:evolve"]}
+{"q": "the goroutine writes to the map while another reads it", "expect": ["command:go-review"]}
+{"q": "i want to see which learned behaviours the agent is confident about", "expect": ["command:instinct-status"]}
+{"q": "a loop is stuck and nobody knows which step it is repeating", "expect": ["command:loop-status"]}
+{"q": "we reproduce the crash by hand every time and never keep the test", "expect": ["command:orch-fix-defect"]}
+{"q": "next build fails with module not found after we upgraded node", "expect": ["command:react-build"]}
+{"q": "the java build fails with an enforcer rule we did not write", "expect": ["agent:java-build-resolver"]}
+{"q": "we want the assistant to keep working overnight without a human in the loop", "expect": ["skill:autonomous-agent-harness"]}
+{"q": "we need to know whether a freight broker is legitimate before we book", "expect": ["skill:carrier-relationship-management"]}
+{"q": "our competitor profiles are three pages of prose nobody reads", "expect": ["skill:competitive-report-structure"]}
+{"q": "the team argues about raw pointers and const correctness in every review", "expect": ["skill:cpp-coding-standards"]}
+{"q": "someone can drain the liquidity pool by reentering the swap", "expect": ["skill:defi-amm-security"]}
+{"q": "every task gets its own harness and we cannot reuse any of it", "expect": ["skill:dynamic-workflow-mode"]}
+{"q": "we need to search the web and read the results inside the agent", "expect": ["skill:exa-search"]}
+{"q": "an agent edited a file without stating what it believed first", "expect": ["skill:gateguard"]}
+{"q": "our internal workflows have secrets that must not leak into the release", "expect": ["skill:hermes-imports"]}
+{"q": "we cannot decide between moving average and exponential smoothing", "expect": ["skill:inventory-demand-planning"]}
+{"q": "we booked compute for training and need to know if the gpu is free yet", "expect": ["skill:ito-training"]}
+{"q": "the coroutine test hangs because the dispatcher is never advanced", "expect": ["skill:kotlin-testing"]}
+{"q": "an agent with wallet access can be talked into sending funds", "expect": ["skill:llm-trading-agent-security"]}
+{"q": "we need a first draft of an nda from our standard template", "expect": ["skill:master-agreement-generator"]}
+{"q": "the replica reads stale rows because the pool hits the wrong node", "expect": ["skill:mysql-patterns"]}
+{"q": "the switch port reports crc errors and the link keeps dropping", "expect": ["skill:network-interface-health"]}
+{"q": "each fix introduces a new bug two files away", "expect": ["skill:orch-fix-defect"]}
+{"q": "we want to know if a prediction market can serve as a data feed", "expect": ["skill:prediction-market-oracle-research"]}
+{"q": "the quarkus app mixes camel routes with cdi producers and nobody can follow it", "expect": ["skill:quarkus-patterns"]}
+{"q": "we rerun the same prompt five times and cannot compare the decisions", "expect": ["skill:recursive-decision-ledger"]}
+{"q": "we need to find clinical papers for a literature review within a deadline", "expect": ["skill:scientific-db-pubmed-database"]}
+{"q": "we wrote rules and cannot tell whether the agent follows them", "expect": ["skill:skill-comply"]}
+{"q": "the build passes and the static analysis gate never ran", "expect": ["skill:springboot-verification"]}
+{"q": "our videos look inconsistent from one edit to the next", "expect": ["skill:taste-distillation"]}
+{"q": "the designer gave us forty screens and two weeks", "expect": ["skill:ui-to-vue"]}
+{"q": "the desktop app automation cannot find the button through the accessibility tree", "expect": ["skill:windows-desktop-e2e"]}
+{"q": "we want the migration script to run on a schedule without supervision", "expect": ["skill:autonomous-agent-harness"]}
+{"q": "the price of our product changes every week and the forecast is always late", "expect": ["skill:inventory-demand-planning"]}
+{"q": "we need to review a go service for leaked connections", "expect": ["command:go-review"]}
+{"q": "the rag pipeline answers from chunks that overlap three documents", "expect": ["agent:rag-pipeline-reviewer"]}
+{"q": "we want to mine the requirements out of a legacy module before rewriting it", "expect": ["agent:spec-miner"]}
+{"q": "our json agreement is generated by hand from a template each time", "expect": ["skill:master-agreement-generator"]}
+{"q": "the tool call is blocked and nobody knows what evidence it wanted", "expect": ["skill:gateguard"]}
+{"q": "we need a scored comparison of four vendors, not a summary", "expect": ["skill:competitive-report-structure"]}
+{"q": "the linter says our skills break in another editor", "expect": ["command:skill-host-compat"]}
+{"q": "we want to reuse a video style across a season of episodes", "expect": ["skill:taste-distillation"]}
