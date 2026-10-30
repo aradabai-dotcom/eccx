@@ -39,11 +39,11 @@ ensure_catalogue() {
   [ -d "$ECC_ROOT/skills" ] && return 0
   if [ "${ECCX_BENCH_NO_FETCH:-0}" = "1" ]; then
     echo "[mutate] catalogue absent sous $ECC_ROOT et ECCX_BENCH_NO_FETCH est posé." >&2
-    echo "[mutate] tools/fetch_ecc.sh $ECC_ROOT" >&2
+    echo "[mutate] bash tools/fetch_ecc.sh $ECC_ROOT" >&2
     exit 2
   fi
   echo "[mutate] catalogue absent sous $ECC_ROOT — récupération du commit épinglé"
-  tools/fetch_ecc.sh "$ECC_ROOT" || {
+  bash "$(dirname "$0")/fetch_ecc.sh" "$ECC_ROOT" || {
     echo "[mutate] catalogue indisponible : la suite ne peut pas être collectée." >&2; exit 2; }
 }
 

@@ -138,7 +138,10 @@ def ensure_catalogue() -> int:
             f"  tools/fetch_ecc.sh {ECC_ROOT}")
     script = ROOT / "tools" / "fetch_ecc.sh"
     print(f"catalogue absent sous {ECC_ROOT} — récupération du commit épinglé")
-    r = subprocess.run([str(script), str(ECC_ROOT)], text=True)
+    # Via `bash`, not via the file's mode bit: the bit is not reliably
+    # preserved across checkouts and clones on every filesystem, and a
+    # benchmark that dies with exit 126 measures nothing.
+    r = subprocess.run(["bash", str(script), str(ECC_ROOT)], text=True)
     if r.returncode:
         raise SystemExit(f"tools/fetch_ecc.sh a échoué ({r.returncode}) : "
                          f"sans catalogue, ces budgets ne mesurent rien.")

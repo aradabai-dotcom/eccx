@@ -5308,7 +5308,8 @@ class TestPerfBenchmarksAreHonest(unittest.TestCase):
         with self.mock.patch.object(self.b.subprocess, "run", fake_run), \
              self.mock.patch.object(self.b, "print") as printed:
             self.b.ensure_catalogue()
-        self.assertTrue(calls[0][0].endswith("tools/fetch_ecc.sh"), calls[0])
+        self.assertEqual(calls[0][0], "bash", calls[0])
+        self.assertTrue(calls[0][1].endswith("tools/fetch_ecc.sh"), calls[0])
         self.assertIn("épinglé", printed.call_args_list[0][0][0])
 
     def test_the_semantic_budget_is_absent_when_the_model_is_absent(self):
@@ -5434,12 +5435,29 @@ class TestPinnedCatalogue(unittest.TestCase):
         import re
         self.assertRegex(self._pin(), r"^[0-9a-f]{40}$")
 
-    def test_the_fetch_script_is_executable_in_git(self):
-        """A shell script committed without its mode bit is a 126 in CI."""
+    def test_the_fetch_script_is_executable_in_the_committed_tree(self):
+        """Checked on HEAD, not on the working index.
+
+        The first version asserted on `git ls-files`, which is the *index*: it
+        passed locally and the commit that reached CI carried mode 100644, so
+        the job died with exit 126 before running anything. What CI executes
+        is the committed tree, so that is what this asserts.
+
+        The mode bit is also no longer load-bearing: every automation invokes
+        these scripts through `bash`, which works whatever the filesystem
+        decided to preserve.
+        """
         import subprocess
-        r = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-s",
+        r = subprocess.run(["git", "-C", str(ROOT), "ls-tree", "HEAD",
                             "tools/fetch_ecc.sh"], capture_output=True, text=True)
-        self.assertTrue(r.stdout.startswith("100755"), r.stdout)
+        self.assertTrue(r.stdout.startswith("100755"), r.stdout or r.stderr)
+
+    def test_automation_does_not_depend_on_the_mode_bit(self):
+        wf = (ROOT / ".github" / "workflows" / "checks.yml").read_text()
+        self.assertIn("bash ./tools/fetch_ecc.sh", wf)
+        self.assertIn("bash ./tools/mutate.sh", wf)
+        body = (ROOT / "perf" / "budgets.py").read_text()
+        self.assertIn('["bash", str(script)', body)
 
     def test_the_script_reads_the_pin_and_not_a_branch(self):
         """Asserted on commands, not on prose: the header comment legitimately
