@@ -36,3 +36,6 @@ htmlcov/
 # Packaging artefacts (python -m build); a wheel in the tree is never source
 build/
 dist/
+
+# Dépendances Node de la base vendue (jamais versionnées) : ./tools/vendor_bootstrap.sh
+vendor/ecc/node_modules/

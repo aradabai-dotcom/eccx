@@ -5,6 +5,12 @@ cd "$(dirname "$0")"
 
 MIN_COVERAGE="${MIN_COVERAGE:-85}"
 
+# Self-heal the exec bit. `core.fileMode=false` in some containers means a
+# checkout can drop it while git's index still records 100755, so the suite
+# fails with PermissionError on ./eccx and nothing says why. CI restores it
+# from the index; this makes the local run agree with CI.
+[ -x ./eccx ] || chmod +x ./eccx
+
 # Self-heal: pip packages are not part of the workspace snapshot.
 if ! python3 -c "import coverage" >/dev/null 2>&1; then
   echo "[run-checks] installing coverage (not persisted between sessions)…"

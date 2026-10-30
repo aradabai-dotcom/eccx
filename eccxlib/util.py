@@ -11,7 +11,21 @@ import time
 from pathlib import Path
 
 ADAPTER_ROOT = Path(__file__).resolve().parent.parent
-ECC_ROOT = Path(os.environ.get("ECC_ROOT", Path.home() / "ECC"))
+def _default_catalogue() -> Path:
+    """Where the catalogue lives when ECC_ROOT is not set.
+
+    The vendored copy under `vendor/ecc/` wins over `~/ECC`: this repository now
+    *owns* its catalogue (see vendor/ecc/PROVENANCE.md), so a clone that has
+    never seen an upstream checkout must work. Falling back to `~/ECC` keeps
+    older setups and the measurement scripts working unchanged.
+    """
+    vendored = ADAPTER_ROOT / "vendor" / "ecc"
+    if (vendored / "skills").is_dir():
+        return vendored
+    return Path.home() / "ECC"
+
+
+ECC_ROOT = Path(os.environ.get("ECC_ROOT") or _default_catalogue())
 ADAPTER_STATE = ADAPTER_ROOT / ".eccx"
 
 WORD_RE = re.compile(r"[a-z0-9][a-z0-9+#._-]*")
