@@ -31,7 +31,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -54,8 +53,8 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 def mcnemar(a: list[bool], b: list[bool]) -> tuple[int, int, float]:
     """(wins, losses, exact two-sided p). Only the discordant pairs matter."""
-    w = sum(1 for x, y in zip(a, b) if y and not x)
-    l = sum(1 for x, y in zip(a, b) if x and not y)
+    w = sum(1 for x, y in zip(a, b, strict=True) if y and not x)
+    l = sum(1 for x, y in zip(a, b, strict=True) if x and not y)
     n = w + l
     if n == 0:
         return 0, 0, 1.0

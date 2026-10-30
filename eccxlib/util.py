@@ -181,7 +181,7 @@ def locked(path: Path, timeout: float = 10.0):
                 break
             except BlockingIOError:
                 if time.monotonic() > deadline:
-                    raise TimeoutError(f"lock busy for {timeout}s: {lock_path}")
+                    raise TimeoutError(f"lock busy for {timeout}s: {lock_path}") from None
                 time.sleep(0.02)
         yield
     finally:

@@ -19,9 +19,10 @@ from __future__ import annotations
 
 import math
 import re
+from itertools import pairwise
 from pathlib import Path
 
-from .util import (ECC_ROOT, TRUNC_MARK, doc_file, est_tokens, read_text, stem,
+from .util import (TRUNC_MARK, doc_file, est_tokens, read_text, stem,
                    tokenize, truncate)
 
 K1, B = 1.2, 0.75
@@ -395,7 +396,7 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
 
     norm_query = " ".join(query.lower().split())
     results = []
-    for doc, f in zip(docs, fields):
+    for doc, f in zip(docs, fields, strict=True):
         s = 0.0
         matched: set[str] = set()
         for t in qtokens:
@@ -426,7 +427,7 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
         name_set = set(f["name"])
         s *= 1.0 + 0.15 * len(name_set & primary)
         padded = f" {' '.join(f['name_seq'])} "
-        for a, b_ in zip(qtokens, qtokens[1:]):
+        for a, b_ in pairwise(qtokens):
             if f"{a} {b_}" in padded:
                 s += 3.0
 
@@ -531,7 +532,7 @@ def render_bundle(results: list[dict], budget_tokens: int = 3500,
     total = sum(scores)
     blocks: list[str] = []
 
-    for i, (r, sc) in enumerate(zip(results, scores)):
+    for r, sc in zip(results, scores, strict=True):
         spent = est_tokens("\n\n".join(blocks))
         remaining = budget_tokens - spent
         if remaining < MIN_BLOCK_TOKENS:

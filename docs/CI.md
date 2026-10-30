@@ -182,12 +182,42 @@ qui était en réalité un index de 607 plus un fichier périmé. Il affiche
 désormais la racine **de l'index**, et le signale quand elle diffère de
 `ECC_ROOT`.
 
+## Dixième obstacle : c'est moi qui écrivais l'examen
+
+Question posée, et elle est juste : tous les seuils de cette CI sont de moi.
+Un repo qui se note lui-même n'est pas noté. La réponse n'est pas de mieux
+rédiger mes propres critères, c'est d'ajouter des validateurs **écrits par
+d'autres** et de publier ce qu'ils trouvent, y compris contre moi. Job
+`hygiene`, à chaque push :
+
+| validateur | ce qu'il a trouvé sur ce dépôt, au premier passage |
+|---|---|
+| **ruff** `--select F,E9,B` (règles externes) | `die()` appelé 3 fois, importé 0 fois → `NameError` au lieu du message prévu ; `zip()` sans `strict=` à 11 endroits ; clé de dictionnaire dupliquée ; **2 classes de tests définies deux fois — 7 tests jamais exécutés** |
+| **zizmor** (audit externe des workflows) | 24 constats : 9 actions non épinglées, 5 permissions trop larges, 4 credentials persistés dans les artefacts, et **1 injection de code** — `github.base_ref` interpolé dans un `run:` du job que je venais d'écrire |
+| **pip-audit** (base CVE externe) | **aucune vulnérabilité** dans ce que l'utilisateur installe (wheel + `numpy`, et avec `fastembed`). Le premier passage signalait `tornado`/`urllib3` : c'était l'outillage du bac à sable, pas le produit — la distinction est vérifiable, pas rhétorique |
+| **packaging** (build + install dans un venv neuf) | le wheel s'installe et route ; mais `eccx --version` n'existait pas, et `eccx --corpus X corpus build` **ignorait X** et indexait le dossier courant |
+
+Les trois derniers défauts de `ruff` et `zizmor` sont dans du code **que
+j'avais écrit dans cette session**. C'est l'argument le plus honnête en faveur
+de l'externalisation : un auteur ne voit pas ce qu'il vient d'écrire.
+
+Deux garde-fous ont été ajoutés pour que ces trous ne reviennent pas :
+`test_no_test_class_is_defined_twice` (Python jette silencieusement la
+première définition) et trois tests de CLI qui exercent `--version`, le chemin
+`die()` et `--corpus … corpus build` — tous découverts par installation propre,
+aucun par lecture.
+
+**Ce que ces validateurs ne peuvent pas dire** : si les 60 requêtes de mesure
+sont les bonnes, si 78,3 % @3 suffit pour *votre* usage, ou si l'architecture
+est la bonne. Ces jugements-là restent les miens, et c'est pourquoi les
+chiffres sont publiés avec leurs échecs et leur protocole, pas avec un badge.
+
 ## Ce que la CI vérifie réellement
 
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 538 tests, couverture 88 % (seuil 85 %), en sous-processus compris
+- 550 tests, couverture 89 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable

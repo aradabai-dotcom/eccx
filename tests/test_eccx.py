@@ -3324,7 +3324,7 @@ class TestCardAndTruncateBudgets(unittest.TestCase):
         self.assertGreater(len(out), 150)
 
 
-class TestIndexerStats(unittest.TestCase):
+class TestIndexerStatsCounters(unittest.TestCase):
     """`stats` — 49 %: three callers read it, including the definition of done."""
 
     def _index(self):
@@ -4724,7 +4724,7 @@ class TestEvalDepthReachesTheEvaluator(unittest.TestCase):
             self.assertIn(f"recall@{depth}", m)
 
 
-class TestSectionRetrieval(unittest.TestCase):
+class TestSectionFusionProperties(unittest.TestCase):
     """Scoring a component by its best H2 section, not by its summary.
 
     The catalogue describes *practices*; the user describes a *symptom*. "the pod
@@ -5474,3 +5474,92 @@ class TestPinnedCatalogue(unittest.TestCase):
         body = src[start:start + 700]      # the function, whatever surrounds it
         self.assertIn("fetch_ecc.sh", body)
         self.assertNotIn("git clone", body)
+
+
+class TestTheSuiteCannotLieAboutItself(unittest.TestCase):
+    """Guards for defects that make the suite *look* green while doing less.
+
+    Found by running external tools against this repository, not by reading it:
+    `ruff` reported F811 on two class names, which means Python had silently
+    bound the second definition and thrown the first away. Seven tests had
+    never executed once, in a suite that reported a test count.
+    """
+
+    def test_no_test_class_is_defined_twice(self):
+        """A duplicated class name is dropped by Python with no warning.
+
+        The count in the README, the coverage number and the mutation score
+        are all computed over what *runs*; a class that does not run is
+        invisible in every one of them.
+        """
+        import ast
+        from collections import Counter
+        tree = ast.parse((ROOT / "tests" / "test_eccx.py").read_text())
+        names = [n.name for n in tree.body if isinstance(n, ast.ClassDef)]
+        dupes = {n: c for n, c in Counter(names).items() if c > 1}
+        self.assertEqual(dupes, {}, f"classes définies plusieurs fois : {dupes}")
+
+    def test_no_test_function_is_defined_twice_in_a_class(self):
+        import ast
+        from collections import Counter
+        tree = ast.parse((ROOT / "tests" / "test_eccx.py").read_text())
+        bad = {}
+        for cls in [n for n in tree.body if isinstance(n, ast.ClassDef)]:
+            names = [f.name for f in cls.body
+                     if isinstance(f, ast.FunctionDef) and f.name.startswith("test")]
+            dupes = {n: c for n, c in Counter(names).items() if c > 1}
+            if dupes:
+                bad[cls.name] = dupes
+        self.assertEqual(bad, {}, f"méthodes de test dupliquées : {bad}")
+
+
+class TestCliSaysWhatItMeans(unittest.TestCase):
+    """Three CLI surfaces that only a clean install would have exposed.
+
+    Each one was found by installing the built wheel in a fresh virtualenv and
+    running the sequence the README tells a new user to run — not by reading
+    the code.
+    """
+
+    def _run(self, *args, env=None):
+        import subprocess
+        import sys as _sys
+        e = dict(**__import__("os").environ)
+        e.update(env or {})
+        return subprocess.run([_sys.executable, str(ROOT / "eccx"), *args],
+                              capture_output=True, text=True, cwd=ROOT, env=e)
+
+    def test_version_flag_exists_and_prints_one(self):
+        r = self._run("--version")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertRegex(r.stdout.strip(), r"^eccx \d+\.\d+")
+
+    def test_a_missing_corpus_index_is_an_error_not_a_traceback(self):
+        """`die()` was called in three places and imported in none: these paths
+        raised NameError, so the user saw a stack trace where the tool meant
+        to print "no corpus index for DIR"."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            r = self._run("--corpus", d, "recall", "x")
+        self.assertNotIn("NameError", r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("no corpus index", r.stderr + r.stdout)
+
+    def test_corpus_flag_is_honoured_by_corpus_build(self):
+        """`eccx --corpus DIR corpus build` and `corpus build --dir DIR` are
+        the same request. The global flag used to be ignored, so the build
+        indexed the *current* directory and the recall that followed could not
+        find what had just been built."""
+        import tempfile
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as home:
+            root = Path(d) / "notes"
+            root.mkdir()
+            (root / "vpn.md").write_text("# VPN\n\n## Pannes\n\nLe tunnel tombe.\n")
+            env = {"HOME": home}
+            b = self._run("--corpus", str(root), "corpus", "build", env=env)
+            self.assertEqual(b.returncode, 0, b.stderr)
+            self.assertIn("1 documents", b.stdout)
+            # and the state landed where `--corpus` says it should
+            slug = __import__("re").sub(r"[^a-z0-9]+", "-", str(root).lower()).strip("-")[-40:]
+            self.assertTrue((Path(home) / ".eccx" / slug / "index.json").is_file())

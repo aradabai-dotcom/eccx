@@ -23,12 +23,25 @@ import time
 from pathlib import Path
 
 from . import frontmatter as fm
-from . import hooks, indexer, memory, router, util
-from .util import (ADAPTER_STATE, ADAPTER_ROOT, ECC_ROOT, c, doc_file, est_tokens, hr,
-                   read_text, truncate)
+from . import hooks, indexer, memory, router
+from .util import (ADAPTER_STATE, ADAPTER_ROOT, ECC_ROOT, c, die, doc_file,
+                   est_tokens, read_text, truncate)
 
 
 # --------------------------------------------------------------------- utils
+
+def _package_version() -> str:
+    """The version that was installed, not one written down twice.
+
+    `eccx --version` did not exist until a wheel was installed in a clean venv
+    and asked for it — the only way to tell which build is running.
+    """
+    try:
+        from importlib.metadata import version
+        return version("eccx")
+    except Exception:
+        return "0.0.0+unknown"
+
 
 def _corpus_root(args=None) -> "Path | None":
     raw = getattr(args, "corpus", None) if args is not None else None
@@ -119,7 +132,7 @@ def cmd_init(args) -> int:
                                 "ecc_root": str(ECC_ROOT)}, indent=1))
     print(c("eccx ready", "b"))
     print(f"  ECC source      {ECC_ROOT}  (v{read_text(ECC_ROOT / 'VERSION').strip()})")
-    print(f"  components      " + ", ".join(f"{k}={v}" for k, v in st.items()
+    print("  components      " + ", ".join(f"{k}={v}" for k, v in st.items()
                                              if k != "tokens_if_all_loaded"))
     print(f"  index           {st['tokens_if_all_loaded']:,} tokens catalogued "
           f"(never loaded at once)")
@@ -147,7 +160,7 @@ def cmd_index(args) -> int:
         st = corpus.stats(idx)
         n_sec = st["sections"]
         print(f"indexed {st['docs']} documents, {n_sec} sections, {st['tokens']:,} tokens")
-        print(f"  kinds   " + ", ".join(f"{k} ({v})" for k, v in st["kinds"].items()))
+        print("  kinds   " + ", ".join(f"{k} ({v})" for k, v in st["kinds"].items()))
         stored = _state_dir(root) / "index.json"
     else:
         idx = indexer.load(force=getattr(args, "force", False))
@@ -504,7 +517,7 @@ def cmd_agent(args) -> int:
     parts = [f"<!-- eccx agent {doc['id']} | tools={meta.get('tools') or 'n/a'} -->",
              f"# Delegation brief: {doc['id']}", "", body.strip()]
     if args.task:
-        parts += ["", "---", "", f"## Task", args.task]
+        parts += ["", "---", "", "## Task", args.task]
         routed = router.score(idx, args.task, kinds=["skill", "rule"], top=args.skills,
                               project_context=_context_for(_project(args)))
         if routed:
@@ -554,8 +567,6 @@ def cmd_fire(args) -> int:
     payload.setdefault("cwd", str(_project(args)))
     payload["hook_event_name"] = args.event
     code, messages = hooks.run(args.event, payload)
-    denies = [m for m in messages if m.startswith("ECC ") and "warning" not in m
-              and "guard:" not in m.lower()[:40]]
     for m in messages:
         is_blocking = code == 2 and any(m.startswith(x) for x in
                                         ("ECC config-protection", "ECC gateguard",
@@ -814,7 +825,6 @@ def _quality_block(idx: dict) -> dict:
     r = evaluate.run(idx, dev)
     out["dev"] = {"intents": r["metrics"]["cases"],
                   **{k: r["metrics"][k] for k in ("recall@1", "recall@3", "recall@5", "mrr")}}
-    hpath = Path(dev[0].get("__file__", "")) if dev and "__file__" in dev[0] else None
     # Two held-out sets, in the order they were written. Each was authored
     # before the feature it measures, and opened once.
     for name in ("heldout", "heldout2"):
@@ -832,7 +842,6 @@ def _quality_block(idx: dict) -> dict:
             "escalated_share": rer["metrics"].get("escalated"),
         }
         try:
-            from . import rerank as _rr
             for k in (15, 30):
                 ceil = sum(
                     1 for g in held
@@ -1281,6 +1290,9 @@ def build_parser() -> argparse.ArgumentParser:
         description="ECC adapted for a harness-less agent sandbox.")
     p.add_argument("--project", default=None,
                    help="project root used for rule-pack detection and memory (default: cwd)")
+    p.add_argument("-V", "--version", action="version",
+                   version=f"eccx {_package_version()}",
+                   help="print the version and exit")
     p.add_argument("--corpus", default=None, metavar="DIR",
                    help="route over your own markdown instead of the ECC catalogue "
                         "(see `eccx corpus build --dir DIR`)")
@@ -1459,7 +1471,8 @@ def build_parser() -> argparse.ArgumentParser:
     c = sub.add_parser("corpus", help="index an arbitrary directory of markdown")
     cs = c.add_subparsers(dest="action", required=True)
     cb = cs.add_parser("build", help="index DIR (markdown/text)")
-    cb.add_argument("--dir", default=".")
+    cb.add_argument("--dir", default=None,
+                    help="dossier à indexer (défaut : --corpus, sinon .)")
     cb.set_defaults(func=cmd_corpus)
     ct = cs.add_parser("stats", help="what the index contains")
     ct.add_argument("--dir", default=None)
@@ -1506,14 +1519,20 @@ def build_parser() -> argparse.ArgumentParser:
 def cmd_corpus(args) -> int:
     from . import corpus
     if args.action == "build":
-        root = Path(args.dir).expanduser().resolve()
+        # `--corpus DIR corpus build` and `corpus build --dir DIR` name the
+        # same thing. They used to disagree: the global flag was ignored here,
+        # so `eccx --corpus mes-notes corpus build` silently indexed the
+        # current directory, and the `recall` that followed said "no corpus
+        # index for mes-notes". Found by installing the wheel in a clean venv
+        # and running the sequence a new user would run.
+        root = Path(args.dir or getattr(args, "corpus", None) or ".").expanduser().resolve()
         idx = corpus.build(root)
         state = _state_dir(root)
         corpus.save(idx, state)
         st = corpus.stats(idx)
         print(f"indexed {st['docs']} documents, {st['sections']} sections, "
               f"{st['tokens']:,} tokens")
-        print(f"  kinds   " + ", ".join(f"{k} ({v})" for k, v in st["kinds"].items()))
+        print("  kinds   " + ", ".join(f"{k} ({v})" for k, v in st["kinds"].items()))
         print(f"  stored  {state / 'index.json'}")
         if st["no_sections"]:
             print(f"  WARNING {st['no_sections']} document(s) have no heading — "
@@ -1521,7 +1540,7 @@ def cmd_corpus(args) -> int:
         print(f"\n  next:  eccx --corpus {root} vectors")
         return 0
     if args.action == "stats":
-        root = Path(args.dir or ".").expanduser().resolve()
+        root = Path(args.dir or getattr(args, "corpus", None) or ".").expanduser().resolve()
         state = _state_dir(root)
         if not (state / "index.json").exists():
             die(f"no corpus index for {root}")

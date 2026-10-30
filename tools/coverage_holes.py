@@ -81,7 +81,7 @@ def collect() -> list[dict]:
 def render(rows: list[dict], md: bool) -> str:
     total = sum(r["count"] for r in rows)
     if md:
-        out = [f"| fichier | fonction | lignes manquantes | n |",
+        out = ["| fichier | fonction | lignes manquantes | n |",
                "|---|---|---|---|"]
         for r in rows:
             out.append(f"| `{r['file']}` | `{r['function']}` | "

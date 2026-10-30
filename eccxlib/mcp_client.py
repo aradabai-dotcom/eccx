@@ -110,7 +110,7 @@ class StdioClient:
                 line = self._lines.get(timeout=remaining)
             except queue.Empty:
                 raise MCPError(f"timeout after {self.timeout}s waiting for a "
-                               f"JSON-RPC response")
+                               f"JSON-RPC response") from None
             if line is None:
                 err = ""
                 try:

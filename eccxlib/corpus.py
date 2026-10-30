@@ -152,7 +152,7 @@ def build(root: Path, kinds: set[str] | None = None) -> dict:
     root = Path(root).expanduser().resolve()
     if not root.is_dir():
         raise NotADirectoryError(f"not a directory: {root}")
-    docs, skipped_big, no_sections = [], [], []
+    docs, no_sections = [], []
     for path in discover(root):
         rel = path.relative_to(root).as_posix()
         try:

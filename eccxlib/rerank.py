@@ -34,7 +34,6 @@ import hashlib
 import json
 import sys
 import time
-from pathlib import Path
 
 from .util import ADAPTER_STATE, est_tokens, locked, save_json
 
@@ -253,7 +252,7 @@ def _project(query: str, results: list[dict],
 
 def _apply(results: list[dict], rec: dict, partial: bool = False):
     ids = [f"{r['doc']['kind']}:{r['doc']['id']}" for r in results]
-    byid = dict(zip(ids, results))
+    byid = dict(zip(ids, results, strict=True))
     judged = [i for i in rec["order"] if i in byid]
     rest = [i for i in ids if i not in judged]
     if rec.get("status") == "no_candidate" and not partial:

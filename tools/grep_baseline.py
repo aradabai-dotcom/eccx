@@ -82,8 +82,8 @@ def rank_grep(docs: dict[str, str], query: str, top: int) -> list[str]:
 
 
 def mcnemar(a: list[bool], b: list[bool]) -> tuple[int, int, float]:
-    w = sum(1 for x, y in zip(a, b) if y and not x)
-    l = sum(1 for x, y in zip(a, b) if x and not y)
+    w = sum(1 for x, y in zip(a, b, strict=True) if y and not x)
+    l = sum(1 for x, y in zip(a, b, strict=True) if x and not y)
     n = w + l
     if n == 0:
         return 0, 0, 1.0

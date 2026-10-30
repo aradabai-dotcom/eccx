@@ -30,7 +30,7 @@ from __future__ import annotations
 import math
 from collections import Counter
 
-from .util import STOP, stem, tokenize
+from .util import STOP, tokenize
 
 MAX_DF_RATIO = 0.12
 MIN_DF = 2
@@ -40,11 +40,11 @@ MIN_DF = 2
 # why this list lives here and not in the router's STOP (that one is frozen, so
 # the measured baseline stays comparable).
 EXPANSION_JUNK = {
-    "they", "them", "their", "there", "these", "those", "wheth", "wheth", "were",
+    "they", "them", "their", "there", "these", "those", "wheth", "were",
     "was", "has", "have", "had", "being", "been", "does", "did", "doing", "done",
     "prefer", "preferably", "follow", "following", "example", "examples",
-    "use", "used", "uses", "using", "includ", "includ", "want", "wants",
-    "need", "needs", "requir", "requirement", "requir", "also", "instead",
+    "use", "used", "uses", "using", "includ", "want", "wants",
+    "need", "needs", "requir", "requirement", "also", "instead",
     "without", "within", "across", "under", "over", "into", "from", "that",
     "your", "you", "will", "must", "should", "could", "would", "may", "might",
     "thing", "things", "way", "ways", "time", "times", "one", "two", "both",
@@ -122,8 +122,7 @@ def build_terms(index: dict, query: str, k_docs: int = 3, beta: float = 0.30,
             support[t] += 1
 
     pool: Counter = Counter()
-    for rank, r in enumerate(seeds):
-        doc = r["doc"]
+    for rank, _seed in enumerate(seeds):
         rank_weight = 1.0 / (1 + rank)
         source = name_only and {t: w for t, w in per_doc[rank].items() if w >= 2.0} \
             or per_doc[rank]

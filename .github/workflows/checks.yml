@@ -9,6 +9,12 @@ name: checks
 #   perf      — timing-sensitive, must NOT block on a noisy runner, runs on main
 #   mutation  — ~25 min, weekly + manual; its job is the *trend*, not the push
 
+# Least privilege, declared once: every job below reads the repo and nothing
+# else. Without this block the default token carries write permissions that no
+# step in this file needs.
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -20,8 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - name: install
@@ -58,8 +66,10 @@ jobs:
     timeout-minutes: 10
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - run: python3 perf/budgets.py
@@ -75,16 +85,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
-          fetch-depth: 0        # `--changed` needs a base to diff against
-      - uses: actions/setup-python@v5
+          fetch-depth: 0
+          persist-credentials: false        # `--changed` needs a base to diff against
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - run: pip install mutmut
       - name: mutation score (full scope, gating)
         run: ./tools/mutate.sh
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
           name: mutation-report
@@ -106,12 +117,75 @@ jobs:
     timeout-minutes: 15
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: "3.12"
       - run: pip install mutmut
       - name: mutation score (diff scope, advisory)
-        run: ./tools/mutate.sh --changed "origin/${{ github.base_ref }}"
+        # `${{ github.base_ref }}` comes from the *pull request*, i.e. from
+        # whoever opened it, and interpolating it into a `run:` block hands
+        # them this job's shell (zizmor: template-injection, high). Pass it
+        # through the environment instead, where it is data.
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: ./tools/mutate.sh --changed "origin/${BASE_REF}"
+
+  hygiene:
+    # Validators written by other people, because a project that grades its
+    # own exam is not graded. Each step answers a question this repository
+    # cannot answer about itself:
+    #   ruff     — undefined names, dead code, silent dict-key collisions
+    #              (found `die()` called in three places and imported in none)
+    #   zizmor   — supply chain and injection in *this* workflow file
+    #              (found github.base_ref interpolated into a shell command)
+    #   pip-audit — CVEs in what a user actually installs, external database
+    #   packaging — does the wheel install and route on a machine that has
+    #              never seen this checkout
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
+        with:
+          python-version: "3.12"
+      - name: install
+        run: pip install -e ".[dev]" ruff zizmor pip-audit build pip-licenses
+      - name: "ruff (F: real bugs, E9: syntax, B: likely mistakes)"
+        run: ruff check eccxlib tools --select F,E9,B
+      - name: zizmor (audit of this workflow)
+        run: zizmor --format plain .github/workflows/checks.yml
+      - name: dependency audit (external CVE database)
+        # `eccx` is installed editable, so pip-audit cannot look it up on PyPI;
+        # everything it *does* depend on is audited.
+        run: pip-audit --progress-spinner off
+      - name: packaging — build the wheel and use it
+        run: |
+          set -eu
+          python -m build --wheel
+          python -m venv /tmp/inst
+          /tmp/inst/bin/pip install --quiet dist/*.whl
+          /tmp/inst/bin/eccx --version
+
+          mkdir -p /tmp/demo
+          printf '# Procedures\n\n## Sauvegardes\n\nLa rotation des sauvegardes est quotidienne.\n' > /tmp/demo/sauvegardes.md
+          printf '# Menus\n\n## Carte du midi\n\nLe plat du jour change chaque semaine.\n' > /tmp/demo/menus.md
+
+          export HOME=/tmp/inst-home
+          /tmp/inst/bin/eccx --corpus /tmp/demo corpus build
+          /tmp/inst/bin/eccx --corpus /tmp/demo recall \
+              "la rotation des sauvegardes est quotidienne" --k 1 --json > /tmp/out.json
+          python - <<'EOF'
+          import json, sys
+          d = json.load(open("/tmp/out.json"))
+          ids = [c["id"] for c in d["candidates"]]
+          if not ids or ids[0] != "sauvegardes":
+              sys.exit(f"the installed wheel routed to {ids}, "
+                       f"not to the file that answers")
+          print("wheel routes correctly:", ids[:3])
+          EOF

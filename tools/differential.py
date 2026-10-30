@@ -35,7 +35,6 @@ Usage:
 """
 from __future__ import annotations
 
-import json
 import random
 import sys
 from pathlib import Path
@@ -132,7 +131,7 @@ def cluster_bootstrap(rows, clusters, B=2000, seed=7):
     """
     rng = random.Random(seed)
     by_cluster = {}
-    for (i, j), v in rows.items():
+    for (i, _j), v in rows.items():
         by_cluster.setdefault(i, []).append(v)
     ids = list(by_cluster)
     means = []
@@ -148,7 +147,7 @@ def paired_test(rows, a, b, clusters):
     """Paired bootstrap of the *difference*, clustered by source document."""
     rng = random.Random(11)
     by_cluster = {}
-    for (i, j), v in rows.items():
+    for (i, _j), v in rows.items():
         by_cluster.setdefault(i, []).append(v[a] - v[b])
     ids = list(by_cluster)
     diffs = []

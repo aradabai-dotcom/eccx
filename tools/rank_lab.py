@@ -28,10 +28,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from eccxlib import indexer, router, util  # noqa: E402
+from eccxlib import indexer, router  # noqa: E402
 from eccxlib.router import (CONTEXT_TOKENS, FIELD_WEIGHT, INTEGRATION_TOKENS,  # noqa: E402
                             KIND_PRIOR, expand_with_origin, _raw_name_parts)
 from eccxlib.util import stem, tokenize  # noqa: E402
+from itertools import pairwise
 
 # Generic English fillers that carry no discriminative signal in a software
 # catalogue. NOT query-specific: every entry is a function word or a verb of
@@ -104,7 +105,7 @@ def score_variant(index, query, top=50, *, qv=1, cov_floor=0.55, drop_numbers=Fa
     primary_idf = sum(idf_of(t) for t in primary if t in df) or 1.0
     norm_query = " ".join(query.lower().split())
     results = []
-    for doc, f in zip(docs, fields):
+    for doc, f in zip(docs, fields, strict=True):
         s = 0.0
         matched = set()
         matched_idf = 0.0
@@ -143,7 +144,7 @@ def score_variant(index, query, top=50, *, qv=1, cov_floor=0.55, drop_numbers=Fa
         s *= 1.0 + 0.15 * len(name_set & primary)
         if phrase == "pair":
             padded = f" {' '.join(f['name_seq'])} "
-            for a, b_ in zip(qtokens, qtokens[1:]):
+            for a, b_ in pairwise(qtokens):
                 if f"{a} {b_}" in padded:
                     s += 3.0
 
@@ -225,7 +226,6 @@ THESAURUS = {
     "outdated": ["stale", "drift", "sync"], "stale": ["outdated", "drift"],
     "drift": ["outdated", "sync", "drift"],
     "silent": ["silently", "swallow", "ignore"], "loudly": ["raise", "fail"],
-    "typo": ["lint", "spelling"],
     "unreviewed": ["review", "stale"], "review": ["reviewer", "pr"],
     "goroutine": ["concurrency", "leak"],
     "concurrency": ["race", "parallel", "async"],

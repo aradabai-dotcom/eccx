@@ -114,7 +114,7 @@ def _commit(path: Path, minus: list[str], plus: list[str],
     if len(minus) != len(plus):
         return False
     text = path.read_text(encoding="utf-8")
-    for old, new in zip(minus, plus):
+    for old, new in zip(minus, plus, strict=True):
         if old not in text:
             return False
         text = text.replace(old, new, 1)
@@ -202,7 +202,7 @@ def main(argv: list[str]) -> int:
     if verdicts["real-survivor"]:
         print("\n  real survivors by function (these are the ones to test):")
         by_fn: dict[str, int] = {}
-        for name, fn, _ in verdicts["real-survivor"]:
+        for _name, fn, _ in verdicts["real-survivor"]:
             by_fn[fn] = by_fn.get(fn, 0) + 1
         for fn, n in sorted(by_fn.items(), key=lambda kv: -kv[1])[:10]:
             print(f"    {fn:<22}{n:>4}")

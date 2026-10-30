@@ -132,7 +132,7 @@ def precommit(project: Path) -> tuple[int, list[str]]:
     blockers: list[str] = []
     warnings: list[str] = []
 
-    for status, path in rows:
+    for _status, path in rows:
         name = Path(path).name
         content = _staged_content(project, path)
 
