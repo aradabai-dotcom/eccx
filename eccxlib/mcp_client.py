@@ -95,8 +95,16 @@ class StdioClient:
 
     def _send(self, obj: dict) -> None:
         assert self.proc and self.proc.stdin
-        self.proc.stdin.write(json.dumps(obj, ensure_ascii=False) + "\n")
-        self.proc.stdin.flush()
+        # A server that died between two calls makes this write raise
+        # BrokenPipeError (or ValueError on a closed file), which escaped to the
+        # caller as a stdlib exception. Callers catch `MCPError`; anything else
+        # is an implementation detail leaking through the API — and it made the
+        # dead-server test flaky, passing or failing on timing.
+        try:
+            self.proc.stdin.write(json.dumps(obj, ensure_ascii=False) + "\n")
+            self.proc.stdin.flush()
+        except (BrokenPipeError, ValueError, OSError) as exc:
+            raise MCPError(f"server is gone ({type(exc).__name__}: {exc})") from exc
 
     def _read(self) -> dict:
         assert self.proc
