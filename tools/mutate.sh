@@ -29,6 +29,24 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
+# The suite indexes the real catalogue (TestRerank, TestIndexerBuild, the CLI
+# tests), so a runner without ~/ECC fails at *collection* — before a single
+# mutant is tested — with a CatalogueAbsent that has nothing to do with
+# mutation. Same rule as perf/budgets.py: a check that needs a fixture fetches
+# it, announces that it did, and can be told not to.
+ECC_ROOT="${ECC_ROOT:-$HOME/ECC}"
+ensure_catalogue() {
+  [ -d "$ECC_ROOT/skills" ] && return 0
+  if [ "${ECCX_BENCH_NO_FETCH:-0}" = "1" ]; then
+    echo "[mutate] catalogue absent sous $ECC_ROOT et ECCX_BENCH_NO_FETCH est posé." >&2
+    echo "[mutate] git clone --depth 1 https://github.com/affaan-m/ECC $ECC_ROOT" >&2
+    exit 2
+  fi
+  echo "[mutate] catalogue absent sous $ECC_ROOT — clonage de https://github.com/affaan-m/ECC"
+  git clone --quiet --depth 1 https://github.com/affaan-m/ECC "$ECC_ROOT" || {
+    echo "[mutate] clonage impossible : la suite ne peut pas être collectée." >&2; exit 2; }
+}
+
 MIN_SCORE="${MIN_SCORE:-0.77}"
 MIN_PCT=$(python3 -c "print(round(float('$MIN_SCORE')*100))")
 REPORT="docs/MUTATION.md"
@@ -138,6 +156,7 @@ items = "".join(f'    "{f}",\n' for f in scope)
 p.write_text(s[:start] + "only_mutate = [\n" + items + "]" + s[end:])
 PYEOF
 
+  ensure_catalogue
   echo "== mutation, portée réduite =="
   echo "   fichiers : ${SCOPE_ARGS[*]}"
   [ -n "$BASE" ] && echo "   base     : $BASE"
@@ -175,6 +194,7 @@ fi
 
 # ---------------------------------------------------------------- full scope
 ensure_mutmut
+ensure_catalogue
 echo "== mutating $(python3 -c "
 import pathlib,re
 s=pathlib.Path('pyproject.toml').read_text()

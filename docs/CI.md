@@ -113,6 +113,15 @@ Trois détails qui font la différence entre un chiffre et un outil :
    qu'il n'était pas dans l'arbre mesuré. L'outil copie maintenant les fichiers
    non commités et l'annonce (`arbre de travail : 4 fichier(s) copié(s)`).
 
+**Et le premier run en CI a échoué** — c'est la seule raison de le faire tourner.
+`mutation-diff` tombe sur `CatalogueAbsent` : la suite indexe le vrai
+catalogue (`TestRerank`, `TestIndexerBuild`), donc sans `~/ECC` elle casse à la
+*collecte*, avant le moindre mutant. Le job `mutation` complet avait exactement
+le même défaut, latent parce que jamais exécuté. Corrigé à la source :
+`tools/mutate.sh` clone `affaan-m/ECC` s'il manque, l'annonce, et
+`ECCX_BENCH_NO_FETCH=1` refuse — la même règle que `perf/budgets.py`, une seule
+fois, valable en local comme en CI.
+
 **Le run réduit a trouvé du vrai, tout de suite** — dans du code que je venais
 d'écrire. Trois runs successifs, même commande, même portée :
 
