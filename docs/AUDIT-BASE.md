@@ -41,18 +41,31 @@ l'ingénierie.
 
 ## 1. SUPPRIMER — la liste courte et vérifiable
 
-### 1.1 Cinq fichiers morts (`scripts/`)
+### 1.1 Cinq candidats, deux suppressions, trois erreurs de ma part
 
-| fichier | pourquoi |
-|---|---|
-| `scripts/ci/pi-core-load-test.js` | test de charge d'un projet Rust (`pi/`) qui n'est **pas** dans la base |
-| `scripts/discord/ecc-bot.mjs` | bot Discord, référencé par aucun script, aucun manifeste, aucun workflow |
-| `scripts/lib/package-manager.d.ts` | déclaration de types sans consommateur TypeScript |
-| `scripts/lib/session-aliases.d.ts` | idem |
-| `scripts/lib/session-manager.d.ts` | idem |
+Mon premier détecteur annonçait « 5 orphelins ». C'était faux sur **trois** :
+`Path("session-manager.d.ts").stem` vaut `"session-manager.d"`, une chaîne qui
+n'existe nulle part. Les trois `.d.ts` sont les déclarations de types de modules
+**vivants** (`session-manager.js` est importé par quatre fichiers).
+**Détecteur corrigé** — le compter comme orphelin aurait justifié une
+suppression réelle.
 
-Gain : 5 fichiers, ~20 Ko. Négligeable en poids, mais ce sont les seuls fichiers
-dont personne ne peut dire à quoi ils servent — et c'est le critère.
+Restent deux fichiers, dont la suppression est justifiée pour une raison qui
+n'est pas « personne ne les référence » mais « ils ne peuvent pas fonctionner
+ici » :
+
+| fichier | décision | pourquoi |
+|---|---|---|
+| `scripts/ci/pi-core-load-test.js` | **supprimé** | exige le CLI `pi` sur le PATH **et** `pi/core/`, qui n'est pas dans la base. Ce n'est pas du code mort : c'est un test d'intégration d'un sous-projet qu'on n'a délibérément pas copié. |
+| `scripts/discord/ecc-bot.mjs` | **supprimé** | bot du serveur Discord **communautaire de l'amont**. Dépend d'un `DISCORD_BOT_TOKEN` et d'une communauté qui n'est pas la nôtre. |
+| `scripts/lib/package-manager.d.ts` | conservé | types du module `package-manager.js`, actif |
+| `scripts/lib/session-aliases.d.ts` | conservé | types du module `session-aliases.js`, actif |
+| `scripts/lib/session-manager.d.ts` | conservé | types du module `session-manager.js`, importé par 4 fichiers |
+
+Pour récupérer `pi/` et son test si le besoin apparaît un jour :
+`./tools/sync_upstream.sh --add pi scripts/ci/pi-core-load-test.js`.
+Le script a été écrit parce que `PROVENANCE.md` y renvoyait… avant qu'il
+n'existe.
 
 ### 1.2 Ce qu'il ne faut **pas** supprimer, malgré l'apparence
 

@@ -135,7 +135,22 @@ def check_orphans() -> int:
                 texts[p] = p.read_text(encoding="utf-8", errors="replace")
             except OSError:
                 pass
-    orphans = [f for f in code if not any(f.stem in t for p, t in texts.items() if p != f)]
+    def refname(p: Path) -> str:
+        """The string other files would contain when they use this one.
+
+        `Path("session-manager.d.ts").stem` is `"session-manager.d"` — a string
+        that appears nowhere. The first version of this audit used `.stem`, so
+        all three `.d.ts` files were reported as orphans while their `.js`
+        counterparts are imported by four modules. A detector that invents
+        orphans is worse than no detector: it justifies deletions.
+        """
+        name = p.name
+        for suffix in (".d.ts", ".ts"):
+            if name.endswith(suffix):
+                return name[: -len(suffix)]
+        return p.stem
+
+    orphans = [f for f in code if not any(refname(f) in t for p, t in texts.items() if p != f)]
     print(f"  fichiers de code  : {len(code)}")
     print(f"  orphelins         : {len(orphans)}")
     for f in sorted(orphans):
