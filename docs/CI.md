@@ -212,6 +212,36 @@ sont les bonnes, si 78,3 % @3 suffit pour *votre* usage, ou si l'architecture
 est la bonne. Ces jugements-là restent les miens, et c'est pourquoi les
 chiffres sont publiés avec leurs échecs et leur protocole, pas avec un badge.
 
+## Onzième obstacle : la CI n'est pas une porte, et je ne peux pas la fermer
+
+Tout ce qui précède rend la CI **honnête**. Rien de tout cela ne la rend
+**obligatoire**. Sur un dépôt privé avec un compte GitHub gratuit, GitHub
+refuse à la fois la protection de branche et les rulesets :
+
+```
+POST /repos/aradabai-dotcom/eccx/rulesets  -> 403
+Upgrade to GitHub Pro or make this repository public to enable this feature.
+```
+
+Conséquence concrète : `main` peut recevoir un commit dont les checks sont
+rouges, et rien ne l'en empêchera. Aujourd'hui c'est théorique — je pousse et je
+lis les logs — mais ce n'est pas une garantie, c'est une discipline. Un dev
+senior ne confond pas les deux, et surtout ne laisse pas un `README` le
+confondre : tant que ce paragraphe est vrai, « CI verte » veut dire « verte au
+dernier run que quelqu'un a regardé », pas « impossible à casser ».
+
+Deux façons de fermer la porte, toutes deux à portée d'un clic mais aucune que
+je puisse décider seul :
+
+| option | ce qu'il faut | ce que ça coûte | ce que ça change |
+|---|---|---|---|
+| **Ruleset sur `main`** | dépôt public **ou** GitHub Pro | gratuit — ou 4 $/mois | `checks` + `hygiene` deviennent obligatoires : un commit rouge ne peut plus atterrir sur `main` |
+| **Rester privé, sans gate** | rien | 0 | l'état actuel : la CI alerte, elle ne bloque pas |
+
+Le choix n'est pas technique, il est de votre côté : publier le dépôt expose
+aussi le nom de votre projet `restaurant-suite` (les documents de mesure le
+citent) même s'il n'en expose pas le contenu.
+
 ## Ce que la CI vérifie réellement
 
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
