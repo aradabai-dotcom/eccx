@@ -45,28 +45,15 @@ else
 fi
 
 echo
-echo "== upstream ECC tree byte-identical to its pinned commit =="
-# The whole adapter rests on "we did not touch upstream": if the clone drifts,
-# every measurement below is measuring a fork nobody reviewed. This caught
-# `npm install` rewriting upstream's yarn.lock on every reinstall.
-if git -C "$HOME/ECC" rev-parse --git-dir >/dev/null 2>&1; then
-  # The workspace snapshot drops file modes, so every executable in the clone
-  # comes back as 0644 and `git status` shows 72 phantom modifications after a
-  # restart. Compare content, not modes — otherwise the gate cries wolf from
-  # the second session on and stops being read.
-  dirty=$(git -C "$HOME/ECC" -c core.fileMode=false status --porcelain | wc -l | tr -d ' ')
-  head_sha=$(git -C "$HOME/ECC" rev-parse --short HEAD)
-  if [ "$dirty" = "0" ]; then
-    echo "ECC @ $head_sha clean"
-    upstream_rc=0
-  else
-    echo "ECC @ $head_sha has $dirty modified file(s):"
-    git -C "$HOME/ECC" -c core.fileMode=false status --porcelain | head -10
-    upstream_rc=1
-  fi
-else
-  echo "[run-checks] ~/ECC is not a git clone — cannot verify upstream" >&2
-  upstream_rc=1
+echo "== the vendored base: what you changed, and is it recorded =="
+# The base used to be an external clone of upstream, and this gate proved it was
+# byte-identical to the pinned commit. It now lives in the repository
+# (vendor/ecc/), where you are expected to modify it — so the question changed
+# from "did anyone touch it" to "is every change a commit we can read".
+python3 tools/base_diff.py
+base_diff_rc=$?
+if [ "$base_diff_rc" -ne 0 ]; then
+  echo "[run-checks] base_diff a échoué (code $base_diff_rc)" >&2
 fi
 
 echo
@@ -180,7 +167,7 @@ python3 tools/budget_smoke.py
 budget_rc=$?
 
 echo
-if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $upstream_rc -eq 0 ] \
+if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $base_diff_rc -eq 0 ] \
    && [ $gaps_rc -eq 0 ] && [ $conf_rc -eq 0 ] && [ $audit_rc -eq 0 ] \
    && [ $eval_rc -eq 0 ] && [ $heldout_rc -eq 0 ] && [ $shortlist_rc -eq 0 ] \
    && [ $sealed1_rc -eq 0 ] && [ $sealed20_rc -eq 0 ] && [ $sealed8_rc -eq 0 ] \
@@ -195,5 +182,5 @@ if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $upstream_rc -eq 0 ] \
   echo "  python3 perf/budgets.py   perf budgets (~30 s, timing-sensitive)"
   exit 0
 fi
-echo "FAILURES (tests=$tests_rc coverage=$cov_rc upstream=$upstream_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
+echo "FAILURES (tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
 exit 1
