@@ -48,6 +48,33 @@ def _corpus_root(args=None) -> "Path | None":
     return Path(raw).expanduser().resolve() if raw else None
 
 
+def _unreadable_routes(results: list[dict]) -> list:
+    """Routes whose source file is gone.
+
+    `read_text` returns "" on OSError, so a deleted catalogue and an empty
+    document render identically: `## Content` followed by nothing. Measured on
+    a wheel with `ECC_ROOT` moved away and an index already built, recall
+    returned 1 222 bytes against 4 963 — the routes survived, every body
+    vanished, and nothing on stderr said so. Silence here is the worst outcome
+    available: the agent gets a list of filenames it cannot open.
+    """
+    from .util import doc_file
+    return [p for p in (doc_file(r["doc"]) for r in results) if not Path(p).is_file()]
+
+
+def _source(args=None) -> tuple[str, str]:
+    """Name the thing being searched, truthfully.
+
+    eccx has two modes and only one of them involves ECC. In `--corpus` mode the
+    reader is searching their own folder: printing "ECC context" there tells them
+    a dependency was used when none was, and hides the fact that the tool works
+    standalone. Found by running the wheel in a venv with no ECC on disk.
+    """
+    if _corpus_root(args) is not None:
+        return "corpus", "document"
+    return "ECC", "ECC component"
+
+
 def _use_corpus_state(root) -> None:
     """Every corpus keeps its own index and vectors under ~/.eccx/<slug>/.
 
@@ -349,7 +376,8 @@ def cmd_recall(args) -> int:
                   f"# then re-run with --rerank (cost ~{req['tokens']} tokens)\n")
         results = results[:args.k]
     if not results:
-        print(f"No ECC component matches '{args.query}'. Try `eccx stats` for what exists.")
+        _, noun = _source(args)
+        print(f"No {noun} matches '{args.query}'. Try `eccx stats` for what exists.")
         return 0
 
     # The contract: below `CONFIDENT_MARGIN` the router does not claim to have
@@ -397,9 +425,20 @@ def cmd_recall(args) -> int:
                          indent=1))
         return 0
 
+    missing = _unreadable_routes(results)
+    if missing:
+        anchor = missing[0].parent.parent
+        print(f"# content unavailable for {len(missing)}/{len(results)} route(s) — "
+              f"{anchor} is missing or unreadable.\n"
+              f"#   the route list above is metadata only; bodies live on disk. "
+              f"Clone the catalogue or set ECC_ROOT, then re-run.", file=sys.stderr)
+    label, noun = _source(args)
+    scope = (f"routed to {len(results)} {noun}(s)"
+             if label != "ECC"
+             else f"routed to {len(results)} component(s); project packs: {', '.join(ctx)}")
     header = [
-        f"# ECC context — \"{args.query}\"",
-        f"_routed to {len(results)} component(s); project packs: {', '.join(ctx)}_",
+        f"# {label} context — \"{args.query}\"",
+        f"_{scope}_",
         "",
         "## Route",
     ]

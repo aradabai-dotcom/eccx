@@ -306,6 +306,26 @@ faute de `re.MULTILINE`), plus quatre bugs trouvés par les tests négatifs
 qui plantait sur une ligne JSON valide, stemmer non idempotent). Détail, chiffres
 et limites : `docs/QUALITY.md` §16–23.
 
+## 10 quater. Autonomie — ce qui marche sans ECC, et ce que ça coûte
+
+Question posée franchement : **eccx a-t-il besoin d'ECC pour marcher ?** Oui
+pour son usage principal — router le catalogue ECC, absent du wheel — non pour
+le mode `--corpus`, qui route n'importe quel dossier markdown sans clone.
+Installation neuve sans ECC : `exit 2` et la commande de clone, pas une trace.
+
+Et puisque ECC embarque déjà son propre sélecteur hybride
+(`scripts/lib/context-retrieval.js` + `context-selection.js`, BM25F, n-grammes
+hachés, RRF), **« eccx apporte un routeur » est faux**. Mesuré à armes égales
+sur 57 requêtes aveugles, cibles identiques : eccx 30 % @1 contre 26 % pour le
+routeur d'ECC, écart **non significatif** (McNemar p = 0,79) ; seul le rappel
+@20 se détache (81 % vs 67 %, p = 0,039).
+
+Ce qui reste comme valeur ajoutée est ailleurs : la mesure publiée avec ses
+échecs, le découpage en sections, une CI qui refuse, et le mode `--corpus`.
+
+Tout est dans [`docs/AUTONOMIE.md`](docs/AUTONOMIE.md), y compris le protocole
+et la correction d'équité qui a fait tomber un p de 0,001 à 0,039.
+
 ## 11. Limites assumées
 
 1. **Pas de subagents parallèles** — contrainte du runtime, pas un choix.

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from eccxlib import (enforce, evaluate, expand, frontmatter as fm, hooks,  # noqa: E402
+from eccxlib import (enforce, evaluate, frontmatter as fm, hooks,  # noqa: E402
                      indexer, memory, rerank as rr, router, util, validate as vd)
 
 ECCX = ROOT / "eccx"
@@ -766,7 +766,9 @@ class TestMCPHelpers(unittest.TestCase):
 
     def test_client_raises_on_dead_server(self):
         from eccxlib import mcp_client
-        with self.assertRaises(Exception):
+        # MCPError, not Exception: `assertRaises(Exception)` also swallows an
+        # AttributeError from a typo in the line under test.
+        with self.assertRaises(mcp_client.MCPError):
             with mcp_client.StdioClient("false") as c:
                 c.initialize()
 
@@ -1336,7 +1338,7 @@ class TestMCPDiscovery(unittest.TestCase):
 
     def test_client_raises_on_dead_server(self):
         from eccxlib import mcp_client
-        with self.assertRaises(Exception):
+        with self.assertRaises(mcp_client.MCPError):
             with mcp_client.StdioClient("false", timeout=5) as c:
                 c.initialize()
 
@@ -2109,7 +2111,6 @@ for line in sys.stdin:
         self.server.write_text(self.FAKE, encoding="utf-8")
         self.overrides = ROOT / ".eccx" / "mcp-local.json"
         self.backup = self.overrides.read_text() if self.overrides.exists() else None
-        import eccxlib.util as u
         self.overrides.parent.mkdir(parents=True, exist_ok=True)
         merged = json.loads(self.backup) if self.backup else {}
         merged["eccx-test-echo"] = {"command": sys.executable,
@@ -3020,7 +3021,7 @@ class TestGapsGate(unittest.TestCase):
             json.dump(rows, f)
             path = f.name
         try:
-            args = argparse.Namespace(file=path, shortlist=50, json=False, *extra)
+            args = argparse.Namespace(*extra, file=path, shortlist=50, json=False)
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 rc = cli.cmd_gaps(args)
@@ -4792,7 +4793,6 @@ class TestSectionFusionProperties(unittest.TestCase):
 
     def test_a_span_pointing_outside_the_catalogue_is_refused(self):
         """A stale spans file must not index past the document array."""
-        from eccxlib import semantic
         docs = [{"kind": "skill", "id": "a"}]
         # load_all checks `span.max() < len(docs)`; a span of 5 with 1 doc fails
         self.assertGreater(5, len(docs) - 1)
@@ -4945,7 +4945,6 @@ class TestCorpus(unittest.TestCase):
         components into the user's corpus. The command-line test is the only
         one that would have caught it, because every unit below still passed.
         """
-        from eccxlib import corpus
         state = Path.home() / ".eccx"
         built = run("corpus", "build", "--dir", str(self.root))
         self.assertEqual(built.returncode, 0, built.stderr)
@@ -5432,7 +5431,6 @@ class TestPinnedCatalogue(unittest.TestCase):
         return lines[0].strip()
 
     def test_the_pin_file_names_one_full_commit(self):
-        import re
         self.assertRegex(self._pin(), r"^[0-9a-f]{40}$")
 
     def test_the_fetch_script_is_executable_in_the_committed_tree(self):
@@ -5475,7 +5473,6 @@ class TestPinnedCatalogue(unittest.TestCase):
     def test_ci_no_longer_clones_upstream_at_head(self):
         """The regression guard: a `git clone …/ECC` in the workflow is how
         this bug came back the first time."""
-        import re
         wf = (ROOT / ".github" / "workflows" / "checks.yml").read_text()
         self.assertIn("tools/fetch_ecc.sh", wf)
         self.assertNotRegex(wf, r"git clone[^\n]*affaan-m/ECC")
@@ -5632,6 +5629,33 @@ class TestExternalReviewersAreWired(unittest.TestCase):
         for code in ("F", "E9", "B"):
             self.assertIn(code, line)
 
+    def test_ruff_covers_the_tests_that_do_the_judging(self):
+        """The linter's target was `eccxlib tools` — the 5 600-line test file,
+        where an earlier bug (two classes defined twice, seven tests never
+        collected) was invisible, was the one directory never linted.
+
+        The workflow cannot be edited with the token available here (no
+        `workflow` scope), so the same guarantee is enforced from inside the
+        suite: `ruff` is a dev dependency and the next test runs it over
+        `tests/`. Either route is acceptable; silence is not.
+        """
+        line = [l for l in self.wf.splitlines() if "ruff check" in l][0]
+        pyproject = (ROOT / "pyproject.toml").read_text()
+        self.assertTrue("tests" in line or '"ruff"' in pyproject,
+                        "ni la CI ni les extras dev ne couvrent tests/")
+
+    def test_ruff_itself_passes_on_the_test_suite(self):
+        """Executable version of the line above: if ruff is installed, the
+        tests must lint clean, so a dead import in a fixture fails the build
+        instead of surviving for months."""
+        import shutil
+        import subprocess
+        if not shutil.which("ruff"):
+            self.skipTest("ruff absent (pip install -e '.[dev]')")
+        r = subprocess.run(["ruff", "check", "tests", "--select", "F,E9,B"],
+                           capture_output=True, text=True, cwd=ROOT)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_the_workspace_rule_points_at_this_mechanism(self):
         """The rule document and the code must not drift apart."""
         rule = Path("/home/user/REGLES.md")
@@ -5640,3 +5664,152 @@ class TestExternalReviewersAreWired(unittest.TestCase):
         text = rule.read_text()
         for needle in ("ruff", "zizmor", "pip-audit", "TestExternalReviewersAreWired"):
             self.assertIn(needle, text)
+
+
+class TestWhatWorksWithoutECC(unittest.TestCase):
+    """The boundary of the product, stated once and enforced.
+
+    eccx routes over the ECC catalogue, and ECC ships its own router. So the
+    honest question is not "is eccx better" but "what does eccx do when ECC is
+    not installed". Measured on a wheel installed in a venv with no ECC on
+    disk:
+
+      * default (catalogue) mode  -> exits 2 with a clone instruction. Not
+        standalone, and it says so instead of failing obscurely.
+      * --corpus mode             -> works on any folder of markdown, no ECC.
+
+    The second mode used to print "# ECC context" and "project packs: common_"
+    over the user's own notes — claiming a dependency that was not used. These
+    assertions pin the truthful label so a future refactor cannot quietly put
+    the fiction back.
+    """
+
+    def _run(self, *args, env=None):
+        import os
+        import subprocess
+        import sys as _sys
+        e = dict(os.environ)
+        e.update(env or {})
+        return subprocess.run([_sys.executable, str(ROOT / "eccx"), *args],
+                              capture_output=True, text=True, cwd=ROOT, env=e)
+
+    def test_a_fresh_install_without_ecc_exits_2_and_says_where_to_get_it(self):
+        """First run, no index, no clone. This is the only configuration in
+        which eccx is truly empty — and it must be a sentence, not a traceback.
+
+        The cached-index case is the *other* test in this class: there the
+        routes still come back, which is why "does it need ECC" has two
+        answers and only one of them is "no".
+        """
+        import os
+        import tempfile
+        from eccxlib.util import ADAPTER_STATE
+        idx = ADAPTER_STATE / "index.json"
+        if not idx.is_file():
+            self.skipTest("pas d'index à déplacer")
+        backup = idx.with_suffix(".json.bak-test")
+        os.replace(idx, backup)          # try/finally: never lose the index
+        try:
+            with tempfile.TemporaryDirectory() as home:
+                r = self._run("recall", "debug a flaky test",
+                              env={"HOME": home,
+                                   "ECC_ROOT": str(Path(home) / "absent")})
+        finally:
+            os.replace(backup, idx)
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertNotIn("Traceback", r.stderr)
+        self.assertIn("catalogue absent", r.stderr)
+        self.assertIn("git clone", r.stderr)
+
+    def test_corpus_mode_never_claims_ecc_was_involved(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as home:
+            root = Path(d) / "notes"
+            root.mkdir()
+            (root / "vpn.md").write_text("# VPN\n\n## Pannes\n\nLe tunnel tombe.\n")
+            env = {"HOME": home, "ECC_ROOT": str(Path(home) / "absent")}
+            b = self._run("--corpus", str(root), "corpus", "build", env=env)
+            self.assertEqual(b.returncode, 0, b.stderr)
+            r = self._run("--corpus", str(root), "recall", "pannes du tunnel", env=env)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn("# corpus context", r.stdout)
+            self.assertNotIn("ECC context", r.stdout)
+            self.assertNotIn("project packs", r.stdout)
+
+    def test_a_miss_in_corpus_mode_does_not_talk_about_ecc_components(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as home:
+            root = Path(d) / "notes"
+            root.mkdir()
+            (root / "vpn.md").write_text("# VPN\n\n## Pannes\n\nLe tunnel tombe.\n")
+            env = {"HOME": home, "ECC_ROOT": str(Path(home) / "absent")}
+            self._run("--corpus", str(root), "corpus", "build", env=env)
+            r = self._run("--corpus", str(root), "recall", "zzz qqq", env=env)
+            self.assertIn("No document matches", r.stdout)
+            self.assertNotIn("ECC component", r.stdout)
+
+    def test_a_missing_catalogue_behind_a_cached_index_is_announced(self):
+        """The measured failure: index already built, ECC clone removed.
+
+        recall then returned 1 222 bytes instead of 4 963 — routes present,
+        every body gone — with nothing on stderr. `read_text` turns OSError
+        into "", so an absent file and an empty one were the same thing.
+        """
+        from eccxlib import cli
+        gone = {"kind": "skill", "id": "ghost", "path": "skills/ghost/SKILL.md",
+                "extra": {}}
+        missing = cli._unreadable_routes([{"doc": gone}])
+        self.assertEqual(len(missing), 1)
+        self.assertIn("skills/ghost/SKILL.md", str(missing[0]))
+
+    def test_present_components_are_not_flagged_as_missing(self):
+        """"Always warn" would be as useless as "never warn": the check has to
+        discriminate. A doc that exists must produce an empty list."""
+        from eccxlib import cli
+        from eccxlib.util import ADAPTER_ROOT
+        real = next(p for p in (ADAPTER_ROOT / "skills-local").rglob("SKILL.md") if p.is_file())
+        doc = {"kind": "skill", "id": "real",
+               "path": str(real.relative_to(ADAPTER_ROOT)), "extra": {"root": "adapter"}}
+        self.assertEqual(cli._unreadable_routes([{"doc": doc}]), [])
+
+    def test_recall_actually_calls_the_check(self):
+        """A helper nobody calls is documentation. Guard the wiring at source
+        level, the same way the mode-bit guard works: the call must appear in
+        `cmd_recall`'s body."""
+        import ast
+        tree = ast.parse((ROOT / "eccxlib" / "cli.py").read_text())
+        fn = next(n for n in ast.walk(tree)
+                  if isinstance(n, ast.FunctionDef) and n.name == "cmd_recall")
+        called = {n.func.id for n in ast.walk(fn)
+                  if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+        self.assertIn("_unreadable_routes", called)
+
+
+class TestTheComparisonIsReproducible(unittest.TestCase):
+    """A benchmark nobody can rerun is an anecdote.
+
+    docs/AUTONOMIE.md compares eccx against the router ECC already ships, and
+    reports that the difference is *not* significant at @1/@3/@5. A negative
+    result is only worth publishing if a third party can land on it too, so the
+    two harnesses are in the repo and the doc must keep pointing at them.
+    """
+
+    def test_both_harnesses_are_in_the_tree(self):
+        self.assertTrue((ROOT / "tools" / "ecc_router_bench.js").is_file())
+        self.assertTrue((ROOT / "tools" / "bench_vs_ecc.py").is_file())
+
+    def test_the_node_harness_refuses_to_lie_when_ecc_is_absent(self):
+        """Without the clone it must exit non-zero and name the fix, not
+        silently rank against an empty index."""
+        import subprocess
+        r = subprocess.run(["node",
+                            str(ROOT / "tools" / "ecc_router_bench.js"),
+                            str(ROOT / "evals" / "heldout.jsonl"), "/tmp/definitely-absent"],
+                           capture_output=True, text=True)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("fetch_ecc", r.stderr)
+
+    def test_the_doc_points_at_the_harnesses(self):
+        doc = (ROOT / "docs" / "AUTONOMIE.md").read_text()
+        self.assertIn("ecc_router_bench.js", doc)
+        self.assertIn("bench_vs_ecc.py", doc)
