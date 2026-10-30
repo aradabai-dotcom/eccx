@@ -306,6 +306,27 @@ faute de `re.MULTILINE`), plus quatre bugs trouvés par les tests négatifs
 qui plantait sur une ligne JSON valide, stemmer non idempotent). Détail, chiffres
 et limites : `docs/QUALITY.md` §16–23.
 
+## 10 ter. La base est dans le dépôt
+
+Le catalogue d'ECC (commit `25278e7`) vit désormais dans `vendor/ecc/` :
+**1 831 fichiers, 22 Mo**, sous licence MIT, avec `LICENSE` et traçabilité dans
+`vendor/ecc/PROVENANCE.md`. Ce n'est pas une dépendance qu'on installe, c'est
+une base qu'on **modifie, ampute ou étend** — et le routeur Python lit
+directement dedans, sans clone externe.
+
+Ce que l'appropriation achète, mesuré : supprimer le bruit du catalogue fait
+passer le rang 1 de **32 % à 50 %** (−250 skills sur 314, bonnes réponses
+préservées). Rien d'autre dans ce dépôt ne produit un gain de cette taille.
+
+Ce qu'elle coûte : supprimer une skill qui *était* la bonne réponse fait
+tomber le rang 1 à **5 %**. D'où la procédure en quatre étapes de
+[`docs/BASE-VENDORISEE.md`](docs/BASE-VENDORISEE.md), qui impose de rejouer vos
+20 tâches réelles avant de committer une suppression.
+
+Élaguer ne rend pas l'outil plus rapide (index chargé en 15 ms) ni n'économise
+de tokens : le gain de tokens vient du découpage en sections, pas de la taille
+du catalogue.
+
 ## 10 quater. Autonomie — ce qui marche sans ECC, et ce que ça coûte
 
 Question posée franchement : **eccx a-t-il besoin d'ECC pour marcher ?** Oui

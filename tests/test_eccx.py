@@ -5813,3 +5813,70 @@ class TestTheComparisonIsReproducible(unittest.TestCase):
         doc = (ROOT / "docs" / "AUTONOMIE.md").read_text()
         self.assertIn("ecc_router_bench.js", doc)
         self.assertIn("bench_vs_ecc.py", doc)
+
+
+class TestTheBaseIsOurs(unittest.TestCase):
+    """The catalogue now lives in the repository, so the obligations move here.
+
+    Vendoring under MIT is legal and gives full freedom to modify, delete and
+    extend. Two things it does not give: the right to drop the copyright
+    notice, and the right to let the provenance drift until nobody can say
+    which upstream commit this base came from. Those are checkable, so they are
+    checked.
+    """
+
+    def setUp(self):
+        self.base = ROOT / "vendor" / "ecc"
+
+    def test_the_mit_notice_survives_vendoring(self):
+        lic = self.base / "LICENSE"
+        self.assertTrue(lic.is_file(), "vendor/ecc/LICENSE a disparu")
+        text = lic.read_text()
+        self.assertIn("MIT License", text)
+        self.assertIn("Affaan Mustafa", text)
+
+    def test_the_provenance_names_the_same_commit_as_the_pin(self):
+        """Two files claim where the base came from. If they disagree, one of
+        them is a lie and nobody can tell which."""
+        prov = (self.base / "PROVENANCE.md").read_text()
+        # the pin file is comments-first: the commit is its last non-comment line
+        lines = [l.strip() for l in (ROOT / "ecc-pin.txt").read_text().splitlines()
+                 if l.strip() and not l.strip().startswith("#")]
+        self.assertEqual(len(lines), 1, "ecc-pin.txt doit nommer exactement un commit")
+        self.assertIn(lines[0], prov)
+
+    def test_the_base_routes_without_the_upstream_checkout(self):
+        """ECC_ROOT must resolve inside the repository when the vendored copy
+        is present — otherwise 'the base is in your repo' is a slogan and every
+        run still depends on ~/ECC."""
+        import subprocess
+        code = ("import sys; sys.path.insert(0, '.');"
+                "from eccxlib.util import ECC_ROOT; print(ECC_ROOT)")
+        env = {k: v for k, v in __import__("os").environ.items() if k != "ECC_ROOT"}
+        r = subprocess.run([__import__("sys").executable, "-c", code],
+                           capture_output=True, text=True, cwd=ROOT, env=env)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("vendor/ecc", r.stdout)
+
+    def test_the_catalogue_is_actually_in_the_tree(self):
+        skills = list((self.base / "skills").glob("*/SKILL.md"))
+        self.assertGreater(len(skills), 300)          # 311 upstream + overlay
+        self.assertTrue((self.base / "scripts" / "lib" / "context-selection.js").is_file())
+
+    def test_the_bootstrap_installs_runtime_deps_without_a_lockfile_drift(self):
+        boot = (ROOT / "tools" / "vendor_bootstrap.sh").read_text()
+        self.assertIn("npm ci", boot)
+        self.assertIn("--omit=dev", boot)             # never the 8 dev deps in prod
+        self.assertTrue((self.base / "package-lock.json").is_file())
+
+    def test_node_modules_is_not_versioned(self):
+        """22 MB of dependencies in git would be paid by every clone forever."""
+        import subprocess
+        r = subprocess.run(["git", "ls-files", "vendor/ecc"], capture_output=True, text=True, cwd=ROOT)
+        self.assertNotIn("node_modules/", r.stdout)
+
+    def test_the_docs_name_only_scripts_that_exist(self):
+        doc = (ROOT / "docs" / "BASE-VENDORISEE.md").read_text()
+        for script in ("tools/prune_experiment.py", "tools/token_budget_experiment.py"):
+            with self.subTest(script=script):
+                self.assertTrue((ROOT / script).is_file(), f"{script} cité mais absent")
