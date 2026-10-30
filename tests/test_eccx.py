@@ -2473,6 +2473,28 @@ class TestIndexerBuild(unittest.TestCase):
         self.assertEqual(by_id["commit"]["extra"], {"argument_hint": "<msg>"})
         self.assertEqual(by_id["common/testing"]["extra"], {"pack": "common"})
 
+    def test_a_command_without_argument_hint_gets_an_empty_string(self):
+        """`meta.get("argument-hint", "")` — the default is reachable.
+
+        Two surviving mutants in the diff-scoped run replaced that default with
+        None: every fixture in this class happens to carry the key, so the
+        default was dead code as far as the suite was concerned, and "None"
+        would have reached the index instead of "".
+        """
+        root = Path(tempfile.mkdtemp())
+        try:
+            (root / "commands").mkdir()
+            (root / "commands" / "nu.md").write_text(
+                "---\ndescription: sans argument\n---\n\n# nu\n")
+            (root / "skills" / "s").mkdir(parents=True)
+            (root / "skills" / "s" / "SKILL.md").write_text("# s\n\n## U\n\ncorps\n")
+            idx = self.ix.build(root)
+        finally:
+            import shutil
+            shutil.rmtree(root, ignore_errors=True)
+        cmd = [d for d in idx["docs"] if d["id"] == "nu"][0]
+        self.assertEqual(cmd["extra"]["argument_hint"], "")
+
     def test_counters_match_the_docs(self):
         idx = self.ix.build(self.root)
         self.assertEqual(idx["count_sections"], sum(len(d["sections"]) for d in idx["docs"]))
@@ -5211,10 +5233,24 @@ class TestCatalogueGuard(unittest.TestCase):
         self.assertNotEqual([d["id"] for d in idx["docs"]], ["pii-redaction"])
 
     def test_local_overlay_skills_do_not_count_as_upstream(self):
+        """Two upstream skills and one overlay — not one and one.
+
+        The first version asserted 1 against {1 upstream, 1 local, 1 rule},
+        which is the same number whether the origin test is `!=` or `==`. The
+        diff-scoped mutation run killed the mutant that flips it only after
+        this test was given an asymmetric count; that is the whole reason the
+        run exists, and it caught this code on its first execution.
+        """
         docs = [{"kind": "skill", "extra": {"origin": "local"}},
                 {"kind": "skill", "extra": {}},
+                {"kind": "skill", "extra": {"dir": "skill/autre"}},
                 {"kind": "rule", "extra": {}}]
-        self.assertEqual(self.indexer._upstream_skills(docs), 1)
+        self.assertEqual(self.indexer._upstream_skills(docs), 2)
+        # A document with no "extra" at all: `d.get("extra", {})` must survive
+        # it. The diff-scoped mutation run found this: replacing the default
+        # with None crashes on exactly the documents that never went through
+        # `_doc`, and no test had one.
+        self.assertEqual(self.indexer._upstream_skills([{"kind": "skill"}]), 1)
 
 
 class TestPerfBenchmarksAreHonest(unittest.TestCase):
@@ -5292,3 +5328,76 @@ class TestPerfBenchmarksAreHonest(unittest.TestCase):
              self.mock.patch.object(self.b.indexer, "load", return_value=fake), \
              self.mock.patch.object(self.b, "require_catalogue", return_value=1):
             return self.b.build_benchmarks()
+
+
+class TestMutationScope(unittest.TestCase):
+    """Deciding *which files* a PR-scoped mutation run covers.
+
+    Three ways this goes wrong, all cheap to make and expensive to notice: the
+    scope includes files that are deliberately not mutated, so the run silently
+    promises coverage it never had; an empty scope is reported as a passing
+    run; or the base reference does not exist and the diff is taken against
+    nothing.
+    """
+
+    def setUp(self):
+        from tools import mutation_scope
+        self.m = mutation_scope
+
+    def test_only_configured_modules_are_in_scope(self):
+        configured = ["eccxlib/util.py", "eccxlib/router.py"]
+        changed = ["eccxlib/cli.py", "eccxlib/router.py", "docs/x.md"]
+        self.assertEqual(self.m.in_scope(configured, changed), ["eccxlib/router.py"])
+
+    def test_scope_keeps_configuration_order(self):
+        """Two runs of the same diff must produce the same string, or the log
+        of one is not comparable with the log of the other."""
+        configured = ["a.py", "b.py", "c.py"]
+        self.assertEqual(self.m.in_scope(configured, ["c.py", "a.py"]), ["a.py", "c.py"])
+
+    def test_a_diff_with_nothing_mutable_is_an_empty_scope_not_an_error(self):
+        self.assertEqual(self.m.in_scope(["a.py"], ["eccxlib/cli.py"]), [])
+
+    def test_pyproject_parsing_reads_the_real_file(self):
+        configured = self.m.parse_only_mutate(self.m.PYPROJECT.read_text())
+        self.assertIn("eccxlib/router.py", configured)
+        self.assertEqual(len(configured), len(set(configured)))
+
+    def test_an_unreadable_config_returns_empty_rather_than_guessing(self):
+        self.assertEqual(self.m.parse_only_mutate("no list here"), [])
+
+    def test_changed_files_only_looks_at_the_library(self):
+        """`-- eccxlib/` in the git call is load-bearing: without it every doc
+        edit drags the whole tree into the intersection computation."""
+        import inspect
+        src = inspect.getsource(self.m.changed_files)
+        self.assertIn('"--", "eccxlib/"', src)
+
+    def test_base_resolution_prefers_the_ci_reference(self):
+        calls = []
+
+        def fake_run(cmd, **kw):
+            calls.append(cmd[-1])
+            class R:
+                returncode = 0 if cmd[-1] == "main^{commit}" else 1
+            return R()
+
+        with self.mock_patch(fake_run):
+            self.assertEqual(self.m.resolve_base(("origin/main", "main", "HEAD~1")), "main")
+        self.assertEqual(calls, ["origin/main^{commit}", "main^{commit}"])
+
+    def test_no_resolvable_base_is_reported_not_guessed(self):
+        class R:
+            returncode = 1
+        with self.mock_patch(lambda cmd, **kw: R()):
+            self.assertIsNone(self.m.resolve_base())
+
+    def mock_patch(self, fake_run):
+        from unittest import mock
+        import contextlib
+
+        @contextlib.contextmanager
+        def _cm():
+            with mock.patch.object(self.m.subprocess, "run", fake_run):
+                yield
+        return _cm()

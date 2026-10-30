@@ -7,57 +7,49 @@
 # `evaluate.run`, whose only tests asserted `cases == 0` — 100% covered, 0%
 # verified.
 #
-# Cost: ~3 minutes for 1 118 mutants on 2 vCPU. That is why it is NOT part of
-# run-checks.sh (which must stay in the 2-5 minute range): this is a
-# pre-release / per-change-to-the-core gate, run deliberately.
-#
 # Usage:
-#   tools/mutate.sh              # run (resumes from the cache if interrupted)
-#   tools/mutate.sh report       # re-print the score from the last run
+#   tools/mutate.sh                     # full scope, gating, ~90 min in CI
+#   tools/mutate.sh report              # re-print the score from the last full run
+#   tools/mutate.sh --changed [BASE]    # only what the diff touched, advisory
+#   tools/mutate.sh --only a.py b.py    # explicit scope, advisory (sharding)
 #   MIN_SCORE=0.85 tools/mutate.sh
+#
+# Why three modes instead of one: the full run answers "is the whole suite
+# still serious?" and belongs on a schedule. A pull request needs the answer in
+# minutes, about the lines it actually changed. Both are mutation testing; only
+# the second one can be a per-change gate, and pretending a 90-minute job is
+# one is how it became `workflow_dispatch`-only and therefore never read.
+#
+# The diff-scoped run happens in a throwaway `git worktree` with its own
+# `.mutmut-cache`. Two reasons, both learned here: mutmut takes its scope from
+# `pyproject.toml` (it has no `--paths` flag), and a shared cache would keep
+# reporting mutants from every earlier full run, silently turning a 400-mutant
+# score into a 2 400-mutant one.
 set -uo pipefail
 cd "$(dirname "$0")/.."
+ROOT="$(pwd)"
 
-# Floor, not target. The floor moved once, on purpose, and the reason is
-# recorded: the first 72.2 % was measured on util+rerank+evaluate only. Adding
-# router.py and indexer.py (the code that actually ranks and indexes) doubled
-# the mutant count to 2421 and dropped the score to 69.0 %. A floor set to the
-# old, narrower number would have been a lie about the product.
-#   69.0 % measured 2026-10-28, scope = util, rerank, evaluate, router, indexer.
-#   79.0 % after the triage in docs/MUTATION-TRIAGE.md (468 survivors left).
-# Floor = measured - 2 points: enough to absorb the +/-1 mutant jitter that
-# mutmut shows between identical runs, small enough that any real regression
-# (a dropped test class costs ~1 point each) trips it.
-# The gate's job is to stop the number from *falling* while survivors are
-# triaged one by one (docs/MUTATION-TRIAGE.md). 80 % remains the goal.
 MIN_SCORE="${MIN_SCORE:-0.77}"
+MIN_PCT=$(python3 -c "print(round(float('$MIN_SCORE')*100))")
 REPORT="docs/MUTATION.md"
+MAX_CHILDREN="${MAX_CHILDREN:-2}"
 
-if ! python3 -c "import mutmut" >/dev/null 2>&1; then
-  echo "[mutate] installing mutmut (pip packages are not part of the snapshot)…"
-  pip install --quiet mutmut >/dev/null 2>&1 || { echo "cannot install mutmut"; exit 2; }
-fi
+ensure_mutmut() {
+  if ! python3 -c "import mutmut" >/dev/null 2>&1; then
+    echo "[mutate] installing mutmut (pip packages are not part of the snapshot)…"
+    pip install --quiet mutmut >/dev/null 2>&1 || { echo "cannot install mutmut"; exit 2; }
+  fi
+}
 
-if [ "${1:-run}" != "report" ]; then
-  echo "== mutating $(grep -c . pyproject.toml >/dev/null; echo 'util.py, rerank.py, evaluate.py') =="
-  echo "   selection: fast unit tests only (see [tool.mutmut] in pyproject.toml)"
-  python3 -m mutmut run --max-children 2
-fi
-
-# --- score ---------------------------------------------------------------
-# `results --all` lists every mutant with its status in one pass:
-#   killed / survived / timeout / no tests / not checked
-# "no tests" is excluded from the denominator on purpose: it is a coverage
-# fact, already reported by the coverage gate, and counting it twice would let
-# a low score hide behind it.
-python3 -m mutmut results --all true > /tmp/mutmut-all.txt 2>/dev/null
-
-# Counted in one Python pass. `grep -c` exits 1 when it matches nothing, so the
-# usual `$(grep -c ... || echo 0)` yields "0\n0" and every later comparison dies
-# with "integer expression expected" — a gate that crashes on the empty case is
-# a gate that never reports the empty case.
-counts=$(python3 - <<'PYEOF'
-import re, sys
+# counts <dir> → "total killed survived timeout notests unchecked"
+# `results --all` lists every mutant with its status in one pass. "no tests" is
+# excluded from the denominator on purpose: it is a coverage fact, already
+# reported by the coverage gate, and counting it twice would let a low score
+# hide behind it.
+counts() {
+  ( cd "$1" && python3 -m mutmut results --all true 2>/dev/null ) > /tmp/mutmut-all.txt
+  python3 - <<'PYEOF'
+import re
 k = s = t = n = u = tot = 0
 for line in open("/tmp/mutmut-all.txt", encoding="utf-8"):
     # The status may contain a space ("no tests"), so grab the whole tail.
@@ -73,8 +65,129 @@ for line in open("/tmp/mutmut-all.txt", encoding="utf-8"):
     elif st == "not checked": u += 1
 print(tot, k, s, t, n, u)
 PYEOF
-)
-read -r TOTAL killed survivors timeouts notests unchecked <<< "$counts"
+}
+
+pct_of() { python3 -c "print(f'{($1 / $2 * 100) if $2 else 0:.1f}')"; }
+
+# ---------------------------------------------------------------- full run
+if [ "${1:-run}" = "report" ]; then
+  ensure_mutmut
+  read -r TOTAL killed survivors timeouts notests unchecked <<< "$(counts "$ROOT")"
+  if [ "${TOTAL:-0}" -eq 0 ]; then
+    echo "[mutate] no data: .mutmut-cache is missing or empty." >&2
+    echo "[mutate] run tools/mutate.sh first; nothing was written." >&2
+    exit 3
+  fi
+  covered=$(( killed + survivors + timeouts ))
+  echo "mutants $TOTAL · killed $killed · survived $survivors · score $(pct_of "$killed" "$covered")%"
+  exit 0
+fi
+
+# ------------------------------------------------------- scoped runs (PR / shard)
+SCOPE_ARGS=()
+BASE=""
+case "${1:-run}" in
+  --changed)
+    BASE="${2:-}"
+    ;;
+  --only)
+    shift
+    SCOPE_ARGS=("$@")
+    ;;
+esac
+
+if [ "${1:-run}" = "--changed" ] || [ "${1:-run}" = "--only" ]; then
+  ensure_mutmut
+  if [ "${1}" = "--changed" ]; then
+    json=$(python3 tools/mutation_scope.py ${BASE:+--base "$BASE"} --json) || exit 2
+    mapfile -t SCOPE_ARGS < <(printf '%s' "$json" | python3 -c \
+      "import json,sys; [print(p) for p in json.load(sys.stdin)['scope']]")
+    BASE=$(printf '%s' "$json" | python3 -c "import json,sys; print(json.load(sys.stdin)['base'])")
+    if [ "${#SCOPE_ARGS[@]}" -eq 0 ]; then
+      echo "mutation: aucun module mutable touché depuis $BASE — rien à mesurer, et ce n'est pas un succès."
+      exit 0
+    fi
+  fi
+  [ "${#SCOPE_ARGS[@]}" -eq 0 ] && { echo "--only attend au moins un fichier" >&2; exit 2; }
+
+  WT="$(mktemp -d)/mutscope"
+  git worktree add -q --detach "$WT" HEAD || { echo "worktree impossible" >&2; exit 2; }
+  trap 'git worktree remove --force "$WT" >/dev/null 2>&1' EXIT
+
+  # A worktree is checked out at HEAD, which is *not* what a developer is
+  # about to push. Measuring HEAD while the fix sits uncommitted answers a
+  # question nobody asked — this cost one wasted 62-second run here, where a
+  # strengthened test appeared to change nothing because it was not in the
+  # tree under test. Copy every modified/untracked path across, and say so.
+  DIRTY=0
+  while IFS= read -r path; do
+    [ -z "$path" ] && continue
+    if [ -e "$path" ]; then mkdir -p "$WT/$(dirname "$path")"; cp "$path" "$WT/$path"; else rm -f "$WT/$path"; fi
+    DIRTY=$((DIRTY + 1))
+  done < <(git status --porcelain --untracked-files=all | cut -c4-)
+  [ "$DIRTY" -gt 0 ] && echo "   arbre de travail : $DIRTY fichier(s) non commité(s) copié(s) dans le worktree"
+
+  python3 - "$WT" "${SCOPE_ARGS[@]}" <<'PYEOF'
+import pathlib, sys
+wt, scope = pathlib.Path(sys.argv[1]), sys.argv[2:]
+p = wt / "pyproject.toml"
+s = p.read_text()
+start = s.index("only_mutate = [")
+end = s.index("]", start) + 1
+items = "".join(f'    "{f}",\n' for f in scope)
+p.write_text(s[:start] + "only_mutate = [\n" + items + "]" + s[end:])
+PYEOF
+
+  echo "== mutation, portée réduite =="
+  echo "   fichiers : ${SCOPE_ARGS[*]}"
+  [ -n "$BASE" ] && echo "   base     : $BASE"
+  START=$(date +%s)
+  ( cd "$WT" && python3 -m mutmut run --max-children "$MAX_CHILDREN" )
+  ELAPSED=$(( $(date +%s) - START ))
+
+  read -r TOTAL killed survivors timeouts notests unchecked <<< "$(counts "$WT")"
+  if [ "${TOTAL:-0}" -eq 0 ] || [ "${unchecked:-0}" -gt 0 ]; then
+    echo "[mutate] run incomplet ou vide ($unchecked/$TOTAL non vérifiés) — aucun chiffre publié." >&2
+    exit 2
+  fi
+  covered=$(( killed + survivors + timeouts ))
+  pct=$(pct_of "$killed" "$covered")
+
+  echo
+  echo "mutants            $TOTAL  (portée : ${SCOPE_ARGS[*]})"
+  echo "  killed           $killed"
+  echo "  survived         $survivors"
+  echo "  timeout          $timeouts"
+  echo "  no test          $notests"
+  echo "score de portée    ${pct}%   en ${ELAPSED} s"
+  echo
+
+  # Advisory, on purpose. A partial score is not comparable with the floor:
+  # nobody has calibrated "what fraction of the mutants in *this file* should
+  # die". Failing a PR on an uncalibrated threshold produces one outcome —
+  # people ignore the check. The feedback is the survivor list, printed below,
+  # and the ratchet stays on the full run.
+  echo "portée réduite : informatif. Le seuil (${MIN_PCT}%) ne s'applique"
+  echo "qu'au run complet — un score partiel n'est pas comparable à un plancher global."
+  ( cd "$WT" && python3 -m mutmut results 2>/dev/null | grep survived ) | head -15
+  exit 0
+fi
+
+# ---------------------------------------------------------------- full scope
+ensure_mutmut
+echo "== mutating $(python3 -c "
+import pathlib,re
+s=pathlib.Path('pyproject.toml').read_text()
+m=re.search(r'only_mutate\s*=\s*\[(.*?)\]', s, re.S)
+print(', '.join(re.findall(chr(34)+'([^'+chr(34)+']+)'+chr(34), m.group(1))) if m else '?')
+") =="
+echo "   selection: fast unit tests only (see [tool.mutmut] in pyproject.toml)"
+START=$(date +%s)
+python3 -m mutmut run --max-children "$MAX_CHILDREN"
+ELAPSED=$(( $(date +%s) - START ))
+
+# --- score ---------------------------------------------------------------
+read -r TOTAL killed survivors timeouts notests unchecked <<< "$(counts "$ROOT")"
 
 # A gate that reports 0 % when it simply has no data is worse than no gate: it is
 # indistinguishable from a real collapse. Refuse, and write nothing.
@@ -90,10 +203,10 @@ if [ "${unchecked:-0}" -gt 0 ]; then
   exit 2
 fi
 covered=$(( killed + survivors + timeouts ))
-pct=$(python3 -c "print(f'{($killed / $covered * 100) if $covered else 0:.1f}')")
+pct=$(pct_of "$killed" "$covered")
 
 echo
-echo "mutants            $TOTAL"
+echo "mutants            $TOTAL   (${ELAPSED} s)"
 echo "  killed           $killed"
 echo "  survived         $survivors"
 echo "  timeout          $timeouts"
@@ -113,7 +226,8 @@ echo "mutation score     ${pct}%  (killed / covered mutants)"
   echo "| timeout | $timeouts |"
   echo "| sans test (ligne non couverte) | $notests |"
   echo "| **score de mutation** | **${pct} %** |"
-  echo "| seuil du harnais | $(python3 -c "print(f'{float('$MIN_SCORE')*100:.0f} %')") |"
+  echo "| durée mesurée | ${ELAPSED} s |"
+  echo "| seuil du harnais | ${MIN_PCT} % |"
   echo
   echo "Score = tués / (tués + survivants + timeouts). Les mutants « sans test »"
   echo "sont exclus : ils mesurent la couverture, déjà gardée par le gate de"
@@ -141,9 +255,9 @@ echo "mutation score     ${pct}%  (killed / covered mutants)"
 echo "rapport écrit dans $REPORT (tri manuel : docs/MUTATION-TRIAGE.md)"
 
 if python3 -c "import sys; sys.exit(0 if $pct/100 >= $MIN_SCORE else 1)"; then
-  echo "mutation gate: ${pct}% >= $(python3 -c "print(f'{float('$MIN_SCORE')*100:.0f}')")% PASS"
+  echo "mutation gate: ${pct}% >= ${MIN_PCT}% PASS"
   exit 0
 fi
-echo "mutation gate: ${pct}% < $(python3 -c "print(f'{float('$MIN_SCORE')*100:.0f}')")% FAIL"
+echo "mutation gate: ${pct}% < ${MIN_PCT}% FAIL"
 echo "→ add tests that assert *behaviour*, not just that code ran. See docs/QUALITY.md §27."
 exit 1

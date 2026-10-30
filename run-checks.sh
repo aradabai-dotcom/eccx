@@ -183,7 +183,8 @@ if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $upstream_rc -eq 0 ] \
   echo "ALL CHECKS PASSED"
   echo
   echo "Not in this gate, by design:"
-  echo "  tools/mutate.sh      mutation score   (~21 min, 2 639 mutants, measured 80.4%)"
+  echo "  tools/mutate.sh          mutation, portée complète (~90 min, 2 639 mutants)
+  tools/mutate.sh --changed  mutation, portée du diff (~60-100 s, informatif)"
   echo "  tools/mutation_audit.py  audits the mutation score itself (~4 min)"
   echo "  python3 perf/budgets.py   perf budgets (~30 s, timing-sensitive)"
   exit 0
