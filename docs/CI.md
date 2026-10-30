@@ -1,13 +1,18 @@
 # La CI, et ce qu'elle a coûté à faire tourner
 
-**État : `checks` vert, `perf` en cours de réparation sans toucher au YAML.**
-Dernier run vérifié, `40973525221` sur `2e54290` : `checks` **success**,
-518 tests, couverture 89 %, `ALL CHECKS PASSED` — lu depuis le log du runner,
-pas depuis un badge. Le commit courant en compte 523 ; son run est celui qui
-fait foi quand il arrive. `perf` était rouge pour une raison désormais nommée par lui-même
-(« aucun skill amont sous `/home/runner/ECC` ») ; le correctif ne passe pas par
-le workflow, que GitHub refuse de modifier sans le scope `workflow` (voir
-l'obstacle 7). Il passe par le banc lui-même.
+**État : tous les jobs verts.** Run `40977987972` sur `0cce790` — lu dans le
+log du runner, pas sur un badge :
+
+| job | résultat | ce que le log dit |
+|---|---|---|
+| `checks` | **success** | `Ran 523 tests in 241.609s` · `coverage gate: 89% >= 85% PASS` · `ALL CHECKS PASSED` |
+| `perf` | **success** | `catalogue absent sous /home/runner/ECC — clonage de …` · `all 9 budgets met` · `1 budget non mesuré : le sémantique, fastembed absent` |
+| `mutation` | skipped | manuel, 90 min, à la demande |
+
+La ligne `perf` est la première de son histoire : le job était rouge depuis sa
+création et personne ne le lisait, `continue-on-error` aidant. Elle dit aussi
+elle-même le budget qu'elle n'a **pas** mesuré, au lieu de le passer par
+accident — la faute exacte qui l'avait rendu inutile.
 
 ## Ce que le chemin a révélé
 
@@ -81,7 +86,7 @@ ne contient pas de catalogue.
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 523 tests, couverture 88 % (seuil 85 %), en sous-processus compris
+- 523 tests, couverture 89 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable
