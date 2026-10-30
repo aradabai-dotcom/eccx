@@ -62,19 +62,53 @@ jobs:
       - run: python3 perf/budgets.py
 
   mutation:
+    # Three tiers, because one job cannot be both fast and thorough.
+    #
+    # The full run answers "does the suite notice when the product is wrong?"
+    # and takes ~90 minutes: it belongs to a schedule, and to nothing else.
+    # Each run of it now writes down its own duration, so the number in this
+    # comment can be checked instead of believed.
     if: github.event_name == 'workflow_dispatch' || github.event.schedule
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # `--changed` needs a base to diff against
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install mutmut
-      - name: mutation score
+      - name: mutation score (full scope, gating)
         run: ./tools/mutate.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: mutation-report
           path: docs/MUTATION.md
+
+  mutation-diff:
+    # The per-change tier: only the modules the pull request touched, on a
+    # throwaway worktree, with its own cache. Measured at 63-99 s for a
+    # 453-mutant scope against ~90 min for 2 639 — the difference between a
+    # check people read and a check people mute.
+    #
+    # Advisory on purpose. A partial score is not comparable with the global
+    # floor (nothing has calibrated "what share of *these* mutants should
+    # die"), so failing on it would produce exactly one outcome: people
+    # ignoring the check. The feedback is the survivor list.
+    needs: checks
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install mutmut
+      - name: mutation score (diff scope, advisory)
+        run: ./tools/mutate.sh --changed "origin/${{ github.base_ref }}"
