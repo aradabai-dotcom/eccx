@@ -113,6 +113,12 @@ Trois détails qui font la différence entre un chiffre et un outil :
    qu'il n'était pas dans l'arbre mesuré. L'outil copie maintenant les fichiers
    non commités et l'annonce (`arbre de travail : 4 fichier(s) copié(s)`).
 
+**Vérifié en CI, pas seulement en local.** PR #1, run `40992662303` :
+`mutation-diff` **success**, 453 mutants, 396 tués / 57 survivants → 87,4 %,
+en 215 s (90 s en local : le runner est plus lent, et il clone le catalogue).
+Chiffres identiques à la machine — c'est la seule chose qui rend le run local
+utile comme pré-vol.
+
 **Et le premier run en CI a échoué** — c'est la seule raison de le faire tourner.
 `mutation-diff` tombe sur `CatalogueAbsent` : la suite indexe le vrai
 catalogue (`TestRerank`, `TestIndexerBuild`), donc sans `~/ECC` elle casse à la
