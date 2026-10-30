@@ -39,12 +39,12 @@ ensure_catalogue() {
   [ -d "$ECC_ROOT/skills" ] && return 0
   if [ "${ECCX_BENCH_NO_FETCH:-0}" = "1" ]; then
     echo "[mutate] catalogue absent sous $ECC_ROOT et ECCX_BENCH_NO_FETCH est posé." >&2
-    echo "[mutate] git clone --depth 1 https://github.com/affaan-m/ECC $ECC_ROOT" >&2
+    echo "[mutate] tools/fetch_ecc.sh $ECC_ROOT" >&2
     exit 2
   fi
-  echo "[mutate] catalogue absent sous $ECC_ROOT — clonage de https://github.com/affaan-m/ECC"
-  git clone --quiet --depth 1 https://github.com/affaan-m/ECC "$ECC_ROOT" || {
-    echo "[mutate] clonage impossible : la suite ne peut pas être collectée." >&2; exit 2; }
+  echo "[mutate] catalogue absent sous $ECC_ROOT — récupération du commit épinglé"
+  tools/fetch_ecc.sh "$ECC_ROOT" || {
+    echo "[mutate] catalogue indisponible : la suite ne peut pas être collectée." >&2; exit 2; }
 }
 
 MIN_SCORE="${MIN_SCORE:-0.77}"

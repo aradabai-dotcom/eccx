@@ -113,20 +113,21 @@ def semantic_available() -> bool:
 
 
 def ensure_catalogue() -> int:
-    """Make sure the catalogue is on disk, or say why it is not.
+    """Make sure the *pinned* catalogue is on disk, or say why it is not.
 
-    The benchmark has exactly one fixture — the upstream catalogue — and it
-    cannot measure anything without it. It used to assume the fixture was
-    there, which is a fine assumption on a developer machine and a false one
-    in CI, where nothing clones ~/ECC unless the workflow says so.
+    The benchmark has exactly one fixture and it cannot measure anything
+    without it. Two failures taught this function its shape:
 
-    The first attempt at a fix was to edit the workflow. GitHub refuses to
-    apply a change under .github/workflows/ to any credential without the
-    classic `workflow` scope, which an OAuth token with `repo` does not have —
-    so instead of asking for a wider credential, the tool now fetches its own
-    fixture. Fetching is announced, happens once, is pinned to upstream HEAD,
-    and `ECCX_BENCH_NO_FETCH=1` turns it back into a hard failure for anyone
-    who needs a hermetic run.
+    1. it used to assume the fixture was there — fine on a developer machine,
+       false in CI, where nothing cloned ~/ECC unless the workflow said so;
+    2. the fix cloned upstream HEAD, which means the fixture *moved*: on
+       2026-10-30 it went from 607 to 611 documents between two runs twenty
+       minutes apart, and a property test flipped from green to red with no
+       change to this repository.
+
+    So the fetch is by commit (`ecc-pin.txt`, via tools/fetch_ecc.sh), it
+    announces itself, and ECCX_BENCH_NO_FETCH=1 turns it back into a hard
+    failure for anyone who needs a hermetic run.
     """
     if (ECC_ROOT / "skills").is_dir():
         return len(list((ECC_ROOT / "skills").iterdir()))
@@ -134,11 +135,13 @@ def ensure_catalogue() -> int:
         raise SystemExit(
             f"catalogue absent sous {ECC_ROOT} et ECCX_BENCH_NO_FETCH est posé : "
             f"ces budgets mesureraient le routage d'un corpus vide.\n"
-            f"  git clone --depth 1 {UPSTREAM} {ECC_ROOT}")
-    print(f"catalogue absent sous {ECC_ROOT} — clonage de {UPSTREAM}")
-    ECC_ROOT.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["git", "clone", "--quiet", "--depth", "1", UPSTREAM,
-                    str(ECC_ROOT)], check=True)
+            f"  tools/fetch_ecc.sh {ECC_ROOT}")
+    script = ROOT / "tools" / "fetch_ecc.sh"
+    print(f"catalogue absent sous {ECC_ROOT} — récupération du commit épinglé")
+    r = subprocess.run([str(script), str(ECC_ROOT)], text=True)
+    if r.returncode:
+        raise SystemExit(f"tools/fetch_ecc.sh a échoué ({r.returncode}) : "
+                         f"sans catalogue, ces budgets ne mesurent rien.")
     return len(list((ECC_ROOT / "skills").iterdir()))
 
 

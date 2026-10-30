@@ -32,8 +32,11 @@ jobs:
         run: pip install -e ".[dev]"
       - name: the catalogue under test
         # ECC is read from $ECC_ROOT (~/ECC by default) and is never vendored.
+        # Fetched *by commit* (ecc-pin.txt): a `git clone` at HEAD means the
+        # fixture moves under CI, and on 2026-10-30 it moved 607 -> 611 docs
+        # between two runs twenty minutes apart, flipping a property test.
         run: |
-          git clone --depth 1 https://github.com/affaan-m/ECC "$HOME/ECC"
+          ./tools/fetch_ecc.sh "$HOME/ECC"
           ./eccx index
       - name: semantic layer (optional dependency)
         run: ./eccx vectors --force   # ~9 min: 607 docs + 4 906 sections

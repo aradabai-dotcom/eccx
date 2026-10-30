@@ -155,8 +155,16 @@ def cmd_index(args) -> int:
         counts: dict[str, int] = {}
         for d in idx["docs"]:
             counts[d["kind"]] = counts.get(d["kind"], 0) + 1
+        # Report the root the *index* was built from, not the one configured
+        # now. Without --force this command serves the cache, and printing
+        # ECC_ROOT next to cached counts claims a rebuild that did not happen
+        # — it cost ten minutes of chasing a 611-document catalogue that was
+        # really a 607-document one plus a stale file.
+        built_from = idx.get("ecc_root") or str(ECC_ROOT)
+        cached = built_from != str(ECC_ROOT)
         print(f"indexed {len(idx['docs'])} components, {n_sec} sections "
-              f"from {ECC_ROOT}")
+              f"from {built_from}"
+              + (f"  (cache ; ECC_ROOT vaut maintenant {ECC_ROOT})" if cached else ""))
         print("  kinds   " + ", ".join(f"{k} ({v})" for k, v in
                                        sorted(counts.items(), key=lambda kv: -kv[1])))
         stored = ADAPTER_STATE / "index.json"

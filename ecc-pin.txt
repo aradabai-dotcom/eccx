@@ -1,0 +1,17 @@
+# The upstream catalogue CI is allowed to test against, by commit.
+#
+# This file exists because CI used to `git clone --depth 1 affaan-m/ECC` and
+# therefore tested against whatever upstream happened to be at the minute the
+# job started. On 2026-10-30 that moved from 25278e7 to b38be6a between two
+# runs twenty minutes apart (607 -> 611 documents, 314 -> 317 skills) and one
+# property test flipped from green to red without a line of this repository
+# changing.
+#
+# It is also a scientific requirement: every routing number published in this
+# repo — the sealed heldout gates, the corpus measurements — was measured
+# against the commit below. Testing against a moving target makes those
+# numbers unreproducible, which makes them unfalsifiable, which makes them
+# marketing.
+#
+# Bumping it is a deliberate act with a diff to read: see docs/CI.md.
+25278e7d7b6cf6e6a4e7a6c8e10f14ff22f0eb5b

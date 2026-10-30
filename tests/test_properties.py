@@ -113,9 +113,18 @@ class TestRouterProperties(unittest.TestCase):
                 only_skill = ids_of(router.score(self.idx, q, kinds=["skill"], top=20))
                 self.assertTrue(all(i.startswith("skill:") for i in only_skill))
                 self.assertTrue(set(only_skill) <= catalogue)
-                # and it really is "the best skills": all 20 slots filled
+                # And it really is "the best skills": every skill that scores
+                # at all is there, up to 20. The original assertion was
+                # `min(20, n_skills)`, which is a claim about the catalogue,
+                # not about the router: it holds only while some query happens
+                # to match 20 skills. It went red the day upstream added four
+                # documents, on a query that legitimately matches one skill
+                # ("help with the help hookify hookify" — mostly stopwords).
                 n_skills = sum(1 for d in self.idx["docs"] if d["kind"] == "skill")
-                self.assertEqual(len(only_skill), min(20, n_skills))
+                every = router.score(self.idx, q, kinds=["skill"], top=n_skills)
+                scoring = sum(1 for r in every if r["score"] > 0)
+                self.assertEqual(len(only_skill), min(20, scoring))
+                self.assertLessEqual(len(only_skill), min(20, n_skills))
 
     def test_coverage_is_a_ratio(self):
         for q in self.queries[:15]:

@@ -5283,7 +5283,7 @@ class TestPerfBenchmarksAreHonest(unittest.TestCase):
         with self.mock.patch.dict("os.environ", {"ECCX_BENCH_NO_FETCH": "1"}):
             with self.assertRaises(SystemExit) as ctx:
                 self.b.ensure_catalogue()
-        self.assertIn("git clone", str(ctx.exception))
+        self.assertIn("fetch_ecc.sh", str(ctx.exception))
         self.assertFalse((self.dir / "ECC").exists())
 
     def test_an_existing_catalogue_is_not_fetched_again(self):
@@ -5293,17 +5293,23 @@ class TestPerfBenchmarksAreHonest(unittest.TestCase):
         run.assert_not_called()
 
     def test_the_fetch_is_announced_before_it_happens(self):
+        """Two things must be true of a fetch: it is announced, and it goes
+        through the pinned script rather than a clone of a branch."""
         calls = []
 
-        def fake_run(cmd, check=False, **kw):
-            calls.append(cmd)
+        def fake_run(cmd, **kw):
+            calls.append(list(cmd))
             (self.dir / "ECC" / "skills" / "s").mkdir(parents=True, exist_ok=True)
+
+            class R:
+                returncode = 0
+            return R()
 
         with self.mock.patch.object(self.b.subprocess, "run", fake_run), \
              self.mock.patch.object(self.b, "print") as printed:
             self.b.ensure_catalogue()
-        self.assertEqual(calls[0][:4], ["git", "clone", "--quiet", "--depth"])
-        self.assertIn("clonage", printed.call_args_list[0][0][0])
+        self.assertTrue(calls[0][0].endswith("tools/fetch_ecc.sh"), calls[0])
+        self.assertIn("épinglé", printed.call_args_list[0][0][0])
 
     def test_the_semantic_budget_is_absent_when_the_model_is_absent(self):
         with self.mock.patch.object(self.b, "semantic_available", return_value=False):
@@ -5401,3 +5407,70 @@ class TestMutationScope(unittest.TestCase):
             with mock.patch.object(self.m.subprocess, "run", fake_run):
                 yield
         return _cm()
+
+
+class TestPinnedCatalogue(unittest.TestCase):
+    """The fixture CI tests against must be the one the numbers came from.
+
+    A `git clone --depth 1` of upstream is not a fixture, it is a moving
+    target. On 2026-10-30 it moved four commits between two CI runs twenty
+    minutes apart (607 -> 611 documents, 314 -> 317 skills) and
+    `test_kind_filter_is_a_filter_not_a_rerank` went red with no change to
+    this repository. The same drift silently invalidates every routing number
+    published in docs/, because they were measured against a specific commit.
+    """
+
+    def setUp(self):
+        self.pin_file = ROOT / "ecc-pin.txt"
+        self.script = ROOT / "tools" / "fetch_ecc.sh"
+
+    def _pin(self) -> str:
+        lines = [l for l in self.pin_file.read_text().splitlines()
+                 if l.strip() and not l.lstrip().startswith("#")]
+        self.assertEqual(len(lines), 1, "ecc-pin.txt doit contenir un seul SHA")
+        return lines[0].strip()
+
+    def test_the_pin_file_names_one_full_commit(self):
+        import re
+        self.assertRegex(self._pin(), r"^[0-9a-f]{40}$")
+
+    def test_the_fetch_script_is_executable_in_git(self):
+        """A shell script committed without its mode bit is a 126 in CI."""
+        import subprocess
+        r = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-s",
+                            "tools/fetch_ecc.sh"], capture_output=True, text=True)
+        self.assertTrue(r.stdout.startswith("100755"), r.stdout)
+
+    def test_the_script_reads_the_pin_and_not_a_branch(self):
+        """Asserted on commands, not on prose: the header comment legitimately
+        says the word "clone" while explaining why it is not used."""
+        src = self.script.read_text()
+        # Comments explain why `git clone` is *not* used and therefore contain
+        # the phrase; the assertions are about executable lines only.
+        code = "\n".join(l for l in src.splitlines()
+                          if l.strip() and not l.lstrip().startswith("#"))
+        self.assertIn("ecc-pin.txt", code)
+        self.assertNotIn("git clone", code)
+        self.assertIn('git -C "$DEST" fetch', code)
+        self.assertIn('--depth 1 origin "$PIN"', code)
+
+    def test_ci_no_longer_clones_upstream_at_head(self):
+        """The regression guard: a `git clone …/ECC` in the workflow is how
+        this bug came back the first time."""
+        import re
+        wf = (ROOT / ".github" / "workflows" / "checks.yml").read_text()
+        self.assertIn("tools/fetch_ecc.sh", wf)
+        self.assertNotRegex(wf, r"git clone[^\n]*affaan-m/ECC")
+
+    def test_the_benchmarks_fetch_the_pin_not_head(self):
+        src = (ROOT / "perf" / "budgets.py").read_text()
+        body = src[src.index("def ensure_catalogue"):src.index("def require_catalogue")]
+        self.assertIn("fetch_ecc.sh", body)
+        self.assertNotIn("git\", \"clone", body)
+
+    def test_the_mutation_script_fetches_the_pin_too(self):
+        src = (ROOT / "tools" / "mutate.sh").read_text()
+        start = src.index("ensure_catalogue() {")
+        body = src[start:start + 700]      # the function, whatever surrounds it
+        self.assertIn("fetch_ecc.sh", body)
+        self.assertNotIn("git clone", body)

@@ -145,12 +145,49 @@ remplacer par `None` ne change rien pour une fixture qui porte la clé — et
 tué les quatre. C'est exactement le trou que ce contrôle existe pour trouver,
 et il l'a trouvé sur son auteur.
 
+## Neuvième obstacle : la CI testait contre une cible mouvante
+
+`checks` faisait `git clone --depth 1 https://github.com/affaan-m/ECC`. Pas
+« clonait une version » : clonait **ce qu'il y avait à la minute où le job
+démarrait**. Le 30/10, l'amont est passé de `25278e7` à `b38be6a` entre deux
+runs espacés de vingt minutes — 607 → 611 documents, 314 → 317 skills — et
+`test_kind_filter_is_a_filter_not_a_rerank` est passé du vert au rouge **sans
+qu'une ligne de ce dépôt change**.
+
+Deux défauts distincts, tous deux corrigés :
+
+1. **La fixture bouge.** `ecc-pin.txt` fixe le commit ; `tools/fetch_ecc.sh`
+   récupère exactement celui-là (`fetch --depth 1 origin <sha>` + `checkout
+   --detach`), refuse d'écraser un dossier qui n'est pas un dépôt, est
+   idempotent, et vérifie que le pin est bien un SHA de 40 caractères. Le
+   workflow, `perf/budgets.py` et `tools/mutate.sh` passent tous par lui — un
+   seul point de vérité, six tests le tiennent.
+   **C'est aussi une exigence scientifique** : tous les chiffres publiés ici
+   (gates scellées, mesures de corpus) ont été mesurés contre ce commit-là.
+   Tester contre une cible mouvante rend ces chiffres irreproductibles, donc
+   infalsifiables, donc publicitaires.
+2. **Le test dépendait du contenu du catalogue.** Il affirmait
+   `len(résultats) == min(20, n_skills)` — une propriété du *catalogue*, pas du
+   routeur : elle n'est vraie que si une requête générée aléatoirement touche
+   20 skills. La requête fautive, « help with the help hookify hookify », est
+   surtout faite de mots vides et ne touche légitimement qu'un skill. La
+   propriété testée est maintenant celle qui compte : le filtre `--kind` rend
+   **tous les skills qui marquent au moins un point**, jusqu'à 20 — donc pas
+   une troncature du top 20 global.
+
+**Bonus trouvé en chemin** : `eccx index` sans `--force` sert le cache tout en
+affichant `from $ECC_ROOT`, c'est-à-dire qu'il annonce une reconstruction qui
+n'a pas eu lieu. C'est ce qui m'a fait chasser un catalogue de 611 documents
+qui était en réalité un index de 607 plus un fichier périmé. Il affiche
+désormais la racine **de l'index**, et le signale quand elle diffère de
+`ECC_ROOT`.
+
 ## Ce que la CI vérifie réellement
 
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 523 tests, couverture 89 % (seuil 85 %), en sous-processus compris
+- 538 tests, couverture 88 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable
