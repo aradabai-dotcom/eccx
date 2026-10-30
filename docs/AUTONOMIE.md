@@ -97,6 +97,27 @@ p de 0,001 à @20. Le chiffre flatteur venait de l'incompatibilité des cibles.
 Il est conservé ici pour la raison inverse : c'est exactement le genre d'erreur
 que ce dépôt s'interdit.
 
+### 2 bis. Le catalogue plus large ne rapporte rien de mesuré
+
+eccx indexe 607 documents là où le routeur d'ECC en voit 292. J'en avais fait
+un argument. Décompte sur les mêmes 60 requêtes aveugles :
+
+| sous-ensemble | n | eccx @1 | ECC @1 | eccx @3 |
+|---|---|---|---|---|
+| cibles exclusivement skills | 16 | 6 | 4 | 9 |
+| cibles mixtes | 41 | 13 | 11 | 20 |
+| **aucune cible skill** (commandes, agents) | **3** | **0** | 0 (structurel) | **1** |
+
+Sur les 3 requêtes où seule une commande ou un agent peut répondre — « plan the
+work for a two week feature » → `command:plan`, « duplicated logic in three
+services » → `agent:refactor-cleaner` — eccx rend **0/3 au rang 1**. ECC ne peut
+pas répondre, mais eccx non plus : il sait *citer* un `command:` ou un
+`agent:`, pas les *choisir*.
+
+Donc l'argument « il voit plus de composants » est faux en pratique. Trois
+requêtes font un échantillon minuscule — la conclusion honnête est « non
+démontré », pas « démontré négatif », mais en aucun cas « avantage ».
+
 ---
 
 ## 3. Alors, quelle valeur ajoutée ?
