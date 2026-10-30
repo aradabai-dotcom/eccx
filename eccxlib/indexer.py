@@ -5,6 +5,12 @@ from a 311-skill catalogue means 80% of what you inject is off-topic; section
 indexing lets the router inject the two paragraphs that actually answer the task.
 Section text is never copied into the index — only (line_start, line_end, cost,
 keywords) — so index.json stays ~1 MB and the source stays the single truth.
+
+One invariant is load-bearing enough to state here: `build()` never writes an
+index that does not contain the upstream catalogue. An index of local-overlay
+skills alone is indistinguishable from a real one to everything downstream, so
+`load()` served it forever and the only symptom appeared three tools later as
+0 % recall. `CatalogueAbsent` is the fix; `_usable()` is the second half.
 """
 from __future__ import annotations
 
