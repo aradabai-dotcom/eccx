@@ -16,7 +16,7 @@ Deux corpus sont pris en charge :
 | **le vôtre** (notes, décisions, doc interne) | `--corpus DIR` : taxonomie = dossiers, sections = titres, ids = chemins relatifs. Index dans `~/.eccx/`, jamais dans votre dossier. |
 | **le catalogue ECC** (`affaan-m/ECC`) | clone dans `$ECC_ROOT` (`~/ECC` par défaut), puis `eccx index` |
 
-- **550 tests**, couverture **89 %** mesurée en sous-processus compris, **80,4 %** de mutation
+- **551 tests**, couverture **89 %** mesurée en sous-processus compris, **80,4 %** de mutation
 - **Shortlist à 80,5 % @20 pour 677 tokens**, contre 1 071 212 pour le catalogue entier
 - `--budget` est une promesse dure, vérifiée par le gate
 
@@ -219,7 +219,7 @@ l'outil ne puisse pas mentir sur lui-même.
 | Enforcement des hooks | bonne volonté | **git pre-commit** |
 | Probe MCP (34 serveurs) | 163 s | **8,1 s** / 0,056 s en cache |
 | Reranker cross-encoder | — | **testé, éliminé** : 5 gains / 51 pertes sur 50 requêtes aveugles (p < 0,0001) — il ramène au littéral et détruit le signal symptôme→pratique |
-| Tests / couverture | 37 / non mesurée | **550 tests / couverture 89 %** (branches + sous-processus inclus) + 19 propriétés + **80,4 % de mutation** (2 639 mutants, plancher mesuré) + un run par diff sur chaque PR (87,4 % sur 453 mutants, 215 s en CI) |
+| Tests / couverture | 37 / non mesurée | **551 tests / couverture 89 %** (branches + sous-processus inclus) + 19 propriétés + **80,4 % de mutation** (2 639 mutants, plancher mesuré) + un run par diff sur chaque PR (87,4 % sur 453 mutants, 215 s en CI) |
 | Parseur YAML | non validé | **croisé avec js-yaml** |
 | Rappel annoncé | 72 % (jeu contaminé) | **36,7 % baseline réel / 73,3 % reranké** |
 | Reranker | aucun | **+36,6 pts recall@1, 96 % du plafond** |
