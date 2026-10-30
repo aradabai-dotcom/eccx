@@ -375,6 +375,28 @@ Trois défauts structurels, eux, sont réels :
    précédemment était un artefact : le rappel ne bouge pas, seul le nombre de
    concurrents baisse. Corrigé et publié dans le document.
 
+## 10 sexies. 20 tâches de dev senior — et le français qui ne passe pas
+
+`docs/EVAL-SENIOR-DEV.md` + `evals/senior-dev.jsonl` : 20 requêtes qu'un senior
+tape vraiment (incident, migration à chaud, revue de PR, ADR, secret exposé…),
+dont **4 en français**. Les cibles ont été écrites avant de regarder les
+classements.
+
+| sous-ensemble | @1 | @20 (rappel) |
+|---|---|---|
+| 20 tâches, catalogue complet | **7/20 (35 %)** | 15/20 (75 %) |
+| 20 tâches, profil `logiciel@1` | **9/20 (45 %)** | 17/20 (85 %) |
+| **français seul** | **0/4 (0 %)** | 2/4 (50 %) |
+
+Le profil de catalogue (`profils/logiciel@1.json`, `eccx --profil logiciel`)
+est une **vue réversible** : 90 skills hors génie logiciel ne sont plus chargées,
+aucun fichier n'est supprimé. Il vaut +2 au rang 1 sur ces tâches — et c'est un
+périmètre, pas une amélioration du routeur.
+
+Le défaut numéro un n'est pas le rang 1 : **c'est le français**. Le catalogue
+est anglais, le routeur n'a aucune capacité interlingue, et « mon déploiement de
+production a échoué » renvoie `review-pr`.
+
 ## 11. Limites assumées
 
 1. **Pas de subagents parallèles** — contrainte du runtime, pas un choix.

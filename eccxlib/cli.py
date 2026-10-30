@@ -337,8 +337,29 @@ def _semantic(index, query: str):
         return None, None
 
 
+def _apply_profil(idx: dict, args) -> dict:
+    """Filter the catalogue by a declared profile, at query time.
+
+    Deliberately not at index time: the index stays complete and the profile is
+    a view. Deleting 90 skills to gain 2 points at rank 1 was rejected (see
+    docs/AUDIT-BASE.md) — a view can be dropped, a deletion cannot.
+    """
+    name = getattr(args, "profil", None)
+    if not name:
+        return idx
+    from . import profil
+    try:
+        prof = profil.load(name)
+    except profil.ProfileError as exc:
+        die(str(exc))
+    out = profil.apply(idx, prof)
+    print(f"# profil {prof['id']} — {len(idx['docs'])} → {len(out['docs'])} documents",
+          file=sys.stderr)
+    return out
+
+
 def cmd_recall(args) -> int:
-    idx = _index(args)
+    idx = _apply_profil(_index(args), args)
     project = _project(args)
     ctx = _context_for(project)
     kinds = args.kind.split(",") if getattr(args, "kind", None) else None
@@ -1332,6 +1353,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-V", "--version", action="version",
                    version=f"eccx {_package_version()}",
                    help="print the version and exit")
+    p.add_argument("--profil", default=None, metavar="NOM",
+                   help="restreindre le catalogue à un profil déclaré (voir profils/) ; "
+                        "réversible, aucun fichier supprimé — `eccx profils` pour la liste")
     p.add_argument("--corpus", default=None, metavar="DIR",
                    help="route over your own markdown instead of the ECC catalogue "
                         "(see `eccx corpus build --dir DIR`)")

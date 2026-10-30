@@ -58,16 +58,38 @@ class TestTheAuditIsReproducible(unittest.TestCase):
         doc = (ROOT / "docs" / "AUDIT-BASE.md").read_text()
         self.assertIn(f"{len(base_audit.OFF_DOMAIN)} skills", doc)
 
-    def test_the_five_orphans_named_in_the_doc_still_exist(self):
-        """Si un orphelin disparaît, le document cite un fichier fantôme ; s'il
-        en apparaît un sixième, l'audit est périmé."""
+    def test_the_audit_names_the_right_orphans_and_their_fate(self):
+        """Le tableau du §1.1 doit rester vrai dans les deux sens : les deux
+        fichiers supprimés ne doivent plus être là, et les trois `.d.ts`
+        conservés doivent y être encore. Une ligne périmée dans ce tableau est
+        une invitation à supprimer un fichier vivant."""
         doc = (ROOT / "docs" / "AUDIT-BASE.md").read_text()
-        # only the table rows of §1.1 — the prose cites other scripts legitimately
-        named = [m for line in doc.splitlines() if line.startswith("| `scripts/")
-                 for m in re.findall(r"`(scripts/[^`]+)`", line)]
-        self.assertEqual(len(named), 5, f"le tableau nomme {named}")
-        for rel in named:
-            self.assertTrue((BASE / rel).is_file(), f"{rel} n'existe plus dans la base")
+        rows = [line for line in doc.splitlines() if line.startswith("| `scripts/")]
+        self.assertEqual(len(rows), 5, f"le tableau du §1.1 a {len(rows)} lignes")
+        for line in rows:
+            rel = re.search(r"`(scripts/[^`]+)`", line).group(1)
+            deleted = "**supprimé**" in line
+            exists = (BASE / rel).is_file()
+            self.assertEqual(exists, not deleted,
+                             f"{rel} : ligne « supprimé »={deleted} mais fichier présent={exists}")
+
+    def test_the_types_declarations_are_not_reported_as_orphans(self):
+        """La régression exacte : `.stem` sur `x.d.ts` rend `x.d`, donc les
+        trois fichiers étaient comptés comme orphelins alors que leurs `.js`
+        sont importés. Le détecteur doit lister exactement deux orphelins."""
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT / "tools"))
+        import base_audit  # noqa: F401  (imported for the module to be importable)
+
+        def refname(p):
+            name = p.name
+            for suffix in (".d.ts", ".ts"):
+                if name.endswith(suffix):
+                    return name[: -len(suffix)]
+            return p.stem
+
+        self.assertEqual(refname(Path("session-manager.d.ts")), "session-manager")
+        self.assertEqual(refname(Path("session-manager.js")), "session-manager")
 
 
 class TestNoSilentSkips(unittest.TestCase):
