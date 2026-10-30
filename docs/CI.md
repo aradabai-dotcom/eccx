@@ -212,42 +212,45 @@ sont les bonnes, si 78,3 % @3 suffit pour *votre* usage, ou si l'architecture
 est la bonne. Ces jugements-là restent les miens, et c'est pourquoi les
 chiffres sont publiés avec leurs échecs et leur protocole, pas avec un badge.
 
-## Onzième obstacle : la CI n'est pas une porte, et je ne peux pas la fermer
+## Onzième obstacle : la CI n'était pas une porte
 
-Tout ce qui précède rend la CI **honnête**. Rien de tout cela ne la rend
+Tout ce qui précède rendait la CI **honnête**. Rien de tout cela ne la rendait
 **obligatoire**. Sur un dépôt privé avec un compte GitHub gratuit, GitHub
-refuse à la fois la protection de branche et les rulesets :
+refuse à la fois la protection de branche et les rulesets (`403`). `main`
+pouvait donc recevoir un commit rouge, et rien ne l'en empêchait.
+
+**Fermé le 30/10**, dépôt passé en public (choix explicite du propriétaire),
+puis règle de dépôt `main: revue obligatoire et checks verts` :
+
+- suppression de `main` interdite, historique non réécrivable (`non_fast_forward`) ;
+- `checks` et `hygiene` déclarés **obligatoires**, avec
+  `strict_required_status_checks_policy` (la branche doit être à jour avant
+  fusion) ;
+- **aucun acteur exempté** (`bypass_actors: []`), administrateur compris.
+
+**Prouvé, pas supposé.** Sonde : un commit trivial poussé directement sur
+`main` —
 
 ```
-POST /repos/aradabai-dotcom/eccx/rulesets  -> 403
-Upgrade to GitHub Pro or make this repository public to enable this feature.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: - 2 of 2 required status checks are expected.
+ ! [remote rejected] HEAD -> main (push declined due to repository rule violations)
 ```
 
-Conséquence concrète : `main` peut recevoir un commit dont les checks sont
-rouges, et rien ne l'en empêchera. Aujourd'hui c'est théorique — je pousse et je
-lis les logs — mais ce n'est pas une garantie, c'est une discipline. Un dev
-senior ne confond pas les deux, et surtout ne laisse pas un `README` le
-confondre : tant que ce paragraphe est vrai, « CI verte » veut dire « verte au
-dernier run que quelqu'un a regardé », pas « impossible à casser ».
+Première tentative de preuve **ratée** et corrigée : le rejet observé était un
+`non-fast-forward` (dépôt local en retard), ce qui ne prouve rien sur la
+règle. Refait après synchronisation, pour obtenir `GH013`.
 
-Deux façons de fermer la porte, toutes deux à portée d'un clic mais aucune que
-je puisse décider seul :
+Conséquence pratique : chaque changement passe désormais par une branche et une
+pull request. Ce n'est pas une gêne, c'est le contrôle qui manquait — et c'est
+la seule façon d'avoir une revue avant `main` quand on travaille seul.
 
-| option | ce qu'il faut | ce que ça coûte | ce que ça change |
-|---|---|---|---|
-| **Ruleset sur `main`** | dépôt public **ou** GitHub Pro | gratuit — ou 4 $/mois | `checks` + `hygiene` deviennent obligatoires : un commit rouge ne peut plus atterrir sur `main` |
-| **Rester privé, sans gate** | rien | 0 | l'état actuel : la CI alerte, elle ne bloque pas |
-
-Le choix n'est pas technique, il est de votre côté : publier le dépôt expose
-aussi le nom de votre projet `restaurant-suite` (les documents de mesure le
-citent) même s'il n'en expose pas le contenu.
-
-## Ce que la CI vérifie réellement
+## Ce que la CI vérifie réellement## Ce que la CI vérifie réellement
 
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 551 tests, couverture 89 % (seuil 85 %), en sous-processus compris
+- 555 tests, couverture 89 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable

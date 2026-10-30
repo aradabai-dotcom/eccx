@@ -5581,3 +5581,62 @@ class TestCliSaysWhatItMeans(unittest.TestCase):
             # and the state landed where `--corpus` says it should
             slug = __import__("re").sub(r"[^a-z0-9]+", "-", str(root).lower()).strip("-")[-40:]
             self.assertTrue((Path(home) / ".eccx" / slug / "index.json").is_file())
+
+
+class TestExternalReviewersAreWired(unittest.TestCase):
+    """The workspace rule, made executable.
+
+    The rule says every quality claim is checked by a tool this project did not
+    write. A rule that lives only in a document is a wish: the first busy
+    afternoon removes the step and nobody notices for months. These assertions
+    fail when an examiner is unhooked.
+
+    What each one bought, on this repository, the first time it ran:
+      ruff   — `die()` called three times and imported none (NameError on a
+               user path); two test classes defined twice, so seven tests
+               never ran in a suite that reported a count
+      zizmor — a value from a pull request interpolated into a shell command
+      wheel  — `eccx --version` did not exist and `--corpus X corpus build`
+               ignored X
+    """
+
+    def setUp(self):
+        self.wf = (ROOT / ".github" / "workflows" / "checks.yml").read_text()
+
+    def test_the_workflow_runs_the_external_examiners(self):
+        for tool, needle in (("ruff", "ruff check"),
+                             ("zizmor", "zizmor"),
+                             ("pip-audit", "pip-audit"),
+                             ("packaging", "python -m build")):
+            with self.subTest(tool=tool):
+                self.assertIn(needle, self.wf)
+
+    def test_the_examiners_run_in_a_job_that_can_fail(self):
+        """Not `|| true`, not `continue-on-error` on the hygiene job: an
+        advisory-only examiner is exactly the failure mode this repository
+        already fixed once for `perf`."""
+        import yaml
+        doc = yaml.safe_load(self.wf)
+        job = doc["jobs"]["hygiene"]
+        self.assertNotIn("continue-on-error", job)
+        for step in job["steps"]:
+            self.assertNotIn("continue-on-error", step)
+            run = step.get("run", "")
+            self.assertNotIn("|| true", run)
+
+    def test_ruff_runs_with_a_named_rule_set_not_a_style_profile(self):
+        """`ruff check` with no `--select` is a linter; `--select F,E9,B` is a
+        bug detector. Only the second one would have caught `die()`."""
+        self.assertIn("ruff check", self.wf)
+        line = [l for l in self.wf.splitlines() if "ruff check" in l][0]
+        for code in ("F", "E9", "B"):
+            self.assertIn(code, line)
+
+    def test_the_workspace_rule_points_at_this_mechanism(self):
+        """The rule document and the code must not drift apart."""
+        rule = Path("/home/user/REGLES.md")
+        if not rule.is_file():
+            self.skipTest("REGLES.md n'est pas dans ce workspace")
+        text = rule.read_text()
+        for needle in ("ruff", "zizmor", "pip-audit", "TestExternalReviewersAreWired"):
+            self.assertIn(needle, text)
