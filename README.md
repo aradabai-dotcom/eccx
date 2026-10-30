@@ -354,6 +354,27 @@ ECC pourrait l'adopter sans eccx.
 Tout est dans [`docs/AUTONOMIE.md`](docs/AUTONOMIE.md), y compris le protocole
 et la correction d'équité qui a fait tomber un p de 0,001 à 0,039.
 
+## 10 quinquies. Audit de la base — que supprimer, corriger, ajouter
+
+`docs/AUDIT-BASE.md`, reproductible par `python3 tools/base_audit.py`.
+
+Ce que l'audit trouve, et qui contredit l'intuition : **la base est saine**, il
+n'y a presque rien à supprimer. Frontmatters valides (311/311), code branché
+(5 orphelins sur 363 fichiers), aucun doublon réel, aucun `eval` en production.
+
+Trois défauts structurels, eux, sont réels :
+
+1. **L'unité d'injection est trop grosse.** Médiane 1 931 tokens par skill,
+   146/311 au-dessus de 2 000, `gateguard` à 10 564 pour un plafond d'ECC de
+   8 000 : il ne peut jamais être injecté. Correctif mesuré : les sections
+   couvrent 2,4× plus de bonnes réponses à budget égal.
+2. **Le rang 1 est le vrai chantier.** Rappel @20 de 85 %, précision @1 de 32 % :
+   le bon document est trouvé mais rarement premier. Trois correctifs essayés,
+   tous mesurés négatifs ou nuls.
+3. **L'élagage du catalogue n'est pas un levier.** Le « +18 points » annoncé
+   précédemment était un artefact : le rappel ne bouge pas, seul le nombre de
+   concurrents baisse. Corrigé et publié dans le document.
+
 ## 11. Limites assumées
 
 1. **Pas de subagents parallèles** — contrainte du runtime, pas un choix.
