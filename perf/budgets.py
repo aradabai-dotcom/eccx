@@ -30,6 +30,7 @@ exactly the mistake §24 documents.
 from __future__ import annotations
 
 import json
+import os
 import statistics
 import subprocess
 import sys
@@ -40,6 +41,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from eccxlib import evaluate, indexer, rerank, router  # noqa: E402
+from eccxlib.util import ECC_ROOT  # noqa: E402
+
+UPSTREAM = "https://github.com/affaan-m/ECC"
 
 REPEATS = 5
 FLOOR_S = 0.05          # below this, the sandbox's scheduler dominates
@@ -95,6 +99,49 @@ def cli(*args: str) -> None:
             f"a command that fails measures nothing. The child said:\n{said}")
 
 
+def semantic_available() -> bool:
+    """Is the embedding model actually importable here?
+
+    `recall --semantic` degrades to lexical without it — no error, no warning,
+    just a fast number that looks like a good result.
+    """
+    try:
+        import fastembed  # noqa: F401
+    except Exception:
+        return False
+    return True
+
+
+def ensure_catalogue() -> int:
+    """Make sure the catalogue is on disk, or say why it is not.
+
+    The benchmark has exactly one fixture — the upstream catalogue — and it
+    cannot measure anything without it. It used to assume the fixture was
+    there, which is a fine assumption on a developer machine and a false one
+    in CI, where nothing clones ~/ECC unless the workflow says so.
+
+    The first attempt at a fix was to edit the workflow. GitHub refuses to
+    apply a change under .github/workflows/ to any credential without the
+    classic `workflow` scope, which an OAuth token with `repo` does not have —
+    so instead of asking for a wider credential, the tool now fetches its own
+    fixture. Fetching is announced, happens once, is pinned to upstream HEAD,
+    and `ECCX_BENCH_NO_FETCH=1` turns it back into a hard failure for anyone
+    who needs a hermetic run.
+    """
+    if (ECC_ROOT / "skills").is_dir():
+        return len(list((ECC_ROOT / "skills").iterdir()))
+    if os.environ.get("ECCX_BENCH_NO_FETCH"):
+        raise SystemExit(
+            f"catalogue absent sous {ECC_ROOT} et ECCX_BENCH_NO_FETCH est posé : "
+            f"ces budgets mesureraient le routage d'un corpus vide.\n"
+            f"  git clone --depth 1 {UPSTREAM} {ECC_ROOT}")
+    print(f"catalogue absent sous {ECC_ROOT} — clonage de {UPSTREAM}")
+    ECC_ROOT.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(["git", "clone", "--quiet", "--depth", "1", UPSTREAM,
+                    str(ECC_ROOT)], check=True)
+    return len(list((ECC_ROOT / "skills").iterdir()))
+
+
 def require_catalogue(idx: dict) -> int:
     """Refuse to time routing against a catalogue that is not there.
 
@@ -113,6 +160,7 @@ def require_catalogue(idx: dict) -> int:
 
 
 def build_benchmarks() -> list[dict]:
+    ensure_catalogue()
     idx = indexer.load()
     require_catalogue(idx)
     queries = [c["q"] for c in evaluate.load_golden(ROOT / "evals" / "routing.jsonl")][:25]
@@ -170,16 +218,23 @@ def build_benchmarks() -> list[dict]:
             "fn": lambda: cli("recall", "debug a flaky python test", "--k", "2",
                               "--no-semantic"),
         },
-        {
+        *([{
             # What turning the model on actually costs, declared rather than
             # implied. Not part of the shipped default; kept so the price is
             # visible next to the benefit, which the corpus measurement says
             # is zero.
+            #
+            # Gated on the model being importable. Without fastembed, `recall
+            # --semantic` degrades to lexical *silently*: measured at 0.153 s
+            # in a bare venv against 1.271 s with the model, i.e. a budget
+            # that passes 25x under its limit while measuring nothing. A gate
+            # that cannot fail is not a gate, so this one is simply absent
+            # when the thing it prices is absent — and the run says so.
             "name": "eccx recall --k 2, sémantique (modèle inclus)",
             "budget_s": 3.81,   # median 1.271s  p90 1.316s
             "fn": lambda: cli("recall", "debug a flaky python test", "--k", "2",
                               "--semantic"),
-        },
+        }] if semantic_available() else []),
         {
             "name": "eccx eval, 50 dev cases, lexical",
             "budget_s": 1.33,   # median 0.445s  p90 0.451s
@@ -236,6 +291,10 @@ def main(argv: list[str]) -> int:
         worst = max(r["headroom"] for r in rows)
         print(f"all {len(rows)} budgets met (median of {REPEATS} runs, "
               f"cold process, no instrumentation)")
+        if not semantic_available():
+            print("1 budget non mesuré : le sémantique, fastembed absent — "
+                  "et sans modèle `recall --semantic` retombe sur le lexical "
+                  "sans le dire")
         print(f"loosest budget: {worst:.1f}x its median — a regression smaller "
               f"than that is invisible here")
     return 1 if failures else 0

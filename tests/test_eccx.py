@@ -4802,14 +4802,22 @@ class TestSectionRetrieval(unittest.TestCase):
         secs[n - 1, 0] = 1.0                            # only the last doc has a section
         span = np.arange(n, dtype="int32")
         fake = {"docs": docs, "sections": secs, "span": span}
+        # `available` is stubbed as well as the two vector calls. Without it
+        # the arm degrades to lexical whenever fastembed is not installed on
+        # the host, and the test then fails for an environment reason while
+        # claiming a section-fusion regression. A test that only passes with
+        # an optional dependency installed is testing the dependency.
         orig_all, orig_q = semantic.load_all, semantic.embed_query
+        orig_av = semantic.available
         semantic.load_all = staticmethod(lambda _docs: fake)
         semantic.embed_query = staticmethod(lambda _q: qv)
+        semantic.available = staticmethod(lambda: True)
         try:
             m = evaluate.run(idx, [{"q": "alpha", "expect": ["skill:alpha"]}],
                              k=2, semantic=True)
         finally:
             semantic.load_all, semantic.embed_query = orig_all, orig_q
+            semantic.available = orig_av
         self.assertEqual(m["rows"][0]["ranked"][0],
                          f"{idx['docs'][n - 1]['kind']}:{idx['docs'][n - 1]['id']}",
                          "the evaluator ignored the section vectors")
@@ -5207,3 +5215,80 @@ class TestCatalogueGuard(unittest.TestCase):
                 {"kind": "skill", "extra": {}},
                 {"kind": "rule", "extra": {}}]
         self.assertEqual(self.indexer._upstream_skills(docs), 1)
+
+
+class TestPerfBenchmarksAreHonest(unittest.TestCase):
+    """Two ways a benchmark lies: it measures nothing, or it cannot run.
+
+    The perf job spent its whole life red because budgets.py assumed a
+    catalogue it never fetched. The fix could not go in the workflow (GitHub
+    refuses .github/workflows/ changes to any credential without the classic
+    `workflow` scope), so the tool fetches its own fixture. And a semantic
+    budget without fastembed silently degrades to lexical — a gate passing 25x
+    under its limit while measuring nothing — so it is absent instead.
+    """
+
+    def setUp(self):
+        import tempfile
+        from unittest import mock
+        self.dir = Path(tempfile.mkdtemp())
+        from perf import budgets
+        self.b = budgets
+        self.mock = mock
+        self.patch = mock.patch.object(budgets, "ECC_ROOT", self.dir / "ECC")
+        self.patch.start()
+
+    def tearDown(self):
+        self.patch.stop()
+        import shutil
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_no_catalogue_and_no_fetch_is_a_hard_failure(self):
+        with self.mock.patch.dict("os.environ", {"ECCX_BENCH_NO_FETCH": "1"}):
+            with self.assertRaises(SystemExit) as ctx:
+                self.b.ensure_catalogue()
+        self.assertIn("git clone", str(ctx.exception))
+        self.assertFalse((self.dir / "ECC").exists())
+
+    def test_an_existing_catalogue_is_not_fetched_again(self):
+        (self.dir / "ECC" / "skills" / "s").mkdir(parents=True)
+        with self.mock.patch.object(self.b.subprocess, "run") as run:
+            self.b.ensure_catalogue()
+        run.assert_not_called()
+
+    def test_the_fetch_is_announced_before_it_happens(self):
+        calls = []
+
+        def fake_run(cmd, check=False, **kw):
+            calls.append(cmd)
+            (self.dir / "ECC" / "skills" / "s").mkdir(parents=True, exist_ok=True)
+
+        with self.mock.patch.object(self.b.subprocess, "run", fake_run), \
+             self.mock.patch.object(self.b, "print") as printed:
+            self.b.ensure_catalogue()
+        self.assertEqual(calls[0][:4], ["git", "clone", "--quiet", "--depth"])
+        self.assertIn("clonage", printed.call_args_list[0][0][0])
+
+    def test_the_semantic_budget_is_absent_when_the_model_is_absent(self):
+        with self.mock.patch.object(self.b, "semantic_available", return_value=False):
+            names = [x["name"] for x in self._benchmarks()]
+        self.assertFalse([n for n in names if "sémantique" in n])
+        with self.mock.patch.object(self.b, "semantic_available", return_value=True):
+            names = [x["name"] for x in self._benchmarks()]
+        self.assertTrue([n for n in names if "sémantique" in n])
+
+    def test_a_catalogue_without_upstream_skills_is_refused(self):
+        """"Non-empty" is not "a catalogue": three overlay skills pass a docs
+        check and rout nothing."""
+        with self.assertRaises(SystemExit) as ctx:
+            self.b.require_catalogue({"docs": [{"kind": "skill", "extra": {"origin": "local"}}]})
+        self.assertIn("catalogue absent", str(ctx.exception))
+
+    def _benchmarks(self):
+        """build_benchmarks(), with the real catalogue stubbed so this stays a
+        millisecond test rather than five index builds."""
+        fake = {"docs": [{"kind": "skill", "extra": {}}]}
+        with self.mock.patch.object(self.b, "ensure_catalogue", return_value=1), \
+             self.mock.patch.object(self.b.indexer, "load", return_value=fake), \
+             self.mock.patch.object(self.b, "require_catalogue", return_value=1):
+            return self.b.build_benchmarks()
