@@ -320,8 +320,15 @@ sur 57 requêtes aveugles, cibles identiques : eccx 30 % @1 contre 26 % pour le
 routeur d'ECC, écart **non significatif** (McNemar p = 0,79) ; seul le rappel
 @20 se détache (81 % vs 67 %, p = 0,039).
 
-Ce qui reste comme valeur ajoutée est ailleurs : la mesure publiée avec ses
-échecs, le découpage en sections, une CI qui refuse, et le mode `--corpus`.
+À budget de tokens égal — le plafond de 32 000 octets d'ECC lui-même — la
+bonne réponse est présente **2,4× plus souvent** (85 % contre 35 %) pour 21 %
+d'octets en moins, parce qu'une section coûte 100–400 tokens là où un skill en
+pèse 2 800. Réserve publiée avec le chiffre : cette tranche ne représente que
+**13 %** du texte du bon document, et l'effet sur la réponse produite par un
+agent n'est pas mesuré.
+
+Le levier n'est donc pas le routeur : c'est la **stratégie d'injection**, et
+ECC pourrait l'adopter sans eccx.
 
 Tout est dans [`docs/AUTONOMIE.md`](docs/AUTONOMIE.md), y compris le protocole
 et la correction d'équité qui a fait tomber un p de 0,001 à 0,039.

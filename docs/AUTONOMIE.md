@@ -97,6 +97,57 @@ p de 0,001 à @20. Le chiffre flatteur venait de l'incompatibilité des cibles.
 Il est conservé ici pour la raison inverse : c'est exactement le genre d'erreur
 que ce dépôt s'interdit.
 
+### 2 bis. Le catalogue plus large ne rapporte rien de mesuré
+
+eccx indexe 607 documents là où le routeur d'ECC en voit 292. J'en avais fait
+un argument. Décompte sur les mêmes 60 requêtes aveugles :
+
+| sous-ensemble | n | eccx @1 | ECC @1 | eccx @3 |
+|---|---|---|---|---|
+| cibles exclusivement skills | 16 | 6 | 4 | 9 |
+| cibles mixtes | 41 | 13 | 11 | 20 |
+| **aucune cible skill** (commandes, agents) | **3** | **0** | 0 (structurel) | **1** |
+
+Sur les 3 requêtes où seule une commande ou un agent peut répondre — « plan the
+work for a two week feature » → `command:plan`, « duplicated logic in three
+services » → `agent:refactor-cleaner` — eccx rend **0/3 au rang 1**. ECC ne peut
+pas répondre, mais eccx non plus : il sait *citer* un `command:` ou un
+`agent:`, pas les *choisir*.
+
+Donc l'argument « il voit plus de composants » est faux en pratique. Trois
+requêtes font un échantillon minuscule — la conclusion honnête est « non
+démontré », pas « démontré négatif », mais en aucun cas « avantage ».
+
+### 2 ter. Le seul chiffre qui parle de l'objectif : à budget égal
+
+Les sections précédentes mesurent la justesse à `k = 20` et la latence. Aucune
+des deux ne dit ce qu'un agent reçoit quand on lui impose un plafond de tokens —
+qui est pourtant la contrainte réelle. Mesure au plafond d'ECC lui-même,
+`MAX_CONTEXT_BYTES = 32 000 octets` :
+
+| | bonne réponse présente | octets / requête | octets par réponse trouvée |
+|---|---|---|---|
+| ECC (skills entiers) | **21/60 (35 %)** | 26 433 | 75 523 |
+| eccx (sections) | **51/60 (85 %)** | 20 988 | 24 691 |
+
+À plafond identique : **2,4× plus de bonnes réponses pour 21 % d'octets en
+moins**, soit trois fois moins d'octets dépensés par réponse trouvée.
+
+Pourquoi : un skill d'ECC pèse ~2 800 tokens ; sous 8 000 tokens de plafond il
+n'en tient que deux ou trois, et ECC refuse (`ECC_CONTEXT_BYTE_BUDGET`) plutôt
+que d'amputer. Les sections d'eccx coûtent 100 à 400 tokens pièce, donc le même
+budget couvre beaucoup plus de candidats.
+
+**La réserve, et elle est sérieuse** : quand eccx trouve, la médiane du texte du
+bon document réellement injectée est de **13 %** (quartiles 9–28 %). C'est une
+tranche ciblée, pas le fichier. Un skill entier est peut-être plus utile qu'un
+paragraphe pertinent — rien ici ne le mesure, parce qu'il faudrait juger la
+réponse produite par un agent, pas la présence d'un identifiant.
+
+Donc la conclusion défendable est : **la stratégie d'injection, pas le routeur,
+est le levier**. Et c'est une modification qu'ECC pourrait adopter seul, sans
+eccx. Reproductible : `python3 tools/token_budget_experiment.py`.
+
 ---
 
 ## 3. Alors, quelle valeur ajoutée ?
