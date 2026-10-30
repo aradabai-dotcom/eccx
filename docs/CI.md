@@ -1,11 +1,17 @@
 # La CI, et ce qu'elle a coûté à faire tourner
 
-**État : vert.** Run n°2, commit `cbc0127`, 507 tests, couverture 90 %,
-`ALL CHECKS PASSED` — lu depuis le log du runner, pas depuis un badge.
+**État : vert sur le code, un job non bloquant encore rouge.** Dernier run,
+commit `2e54290` (run `40973525221`) : `checks` **success**, 518 tests,
+couverture 89 %, `ALL CHECKS PASSED` — lu depuis le log du runner, pas depuis
+un badge. `perf` échoue pour une raison connue et nommée par lui-même
+(« aucun skill amont sous `/home/runner/ECC` ») : le correctif est écrit et
+committé localement, et attend un jeton portant le scope `workflow` — que
+GitHub exige pour toute modification de `.github/workflows/`, quel que soit le
+droit d'écriture par ailleurs.
 
 ## Ce que le chemin a révélé
 
-Six obstacles, tous réels, aucun imaginaire. Ils sont notés ici parce que
+Sept obstacles, tous réels, aucun imaginaire. Ils sont notés ici parce que
 chacun se reproduira pour la personne qui forke ce dépôt.
 
 | # | obstacle | symptôme | cause |
