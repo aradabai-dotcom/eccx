@@ -250,7 +250,7 @@ la seule façon d'avoir une revue avant `main` quand on travaille seul.
 `run-checks.sh` sur un runner Ubuntu 3.12, après avoir cloné `affaan-m/ECC`
 dans `$HOME/ECC` et calculé les 4 906 vecteurs de sections :
 
-- 551 tests, couverture 89 % (seuil 85 %), en sous-processus compris
+- 555 tests, couverture 89 % (seuil 85 %), en sous-processus compris
 - 8 barres de routage scellées, dont `heldout5` @20 ≥ 70 % et `heldout9` @20 ≥ 80 %
 - le budget de tokens comme promesse dure (CLI, `--budget 400/1000`)
 - le chemin `--corpus` de bout en bout (build, recall, eval) sur un dossier jetable
