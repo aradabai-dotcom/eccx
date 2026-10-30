@@ -5876,7 +5876,12 @@ class TestTheBaseIsOurs(unittest.TestCase):
         self.assertNotIn("node_modules/", r.stdout)
 
     def test_the_docs_name_only_scripts_that_exist(self):
+        """A doc that tells the reader to run a script nobody wrote is how this
+        project already lost an afternoon twice."""
         doc = (ROOT / "docs" / "BASE-VENDORISEE.md").read_text()
-        for script in ("tools/prune_experiment.py", "tools/token_budget_experiment.py"):
+        cited = [ln.split()[1] for ln in doc.splitlines()
+                 if ln.strip().startswith("python3 tools/")]
+        self.assertTrue(cited, "le document ne cite aucun script")
+        for script in cited:
             with self.subTest(script=script):
                 self.assertTrue((ROOT / script).is_file(), f"{script} cité mais absent")
