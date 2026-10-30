@@ -72,7 +72,8 @@ def ecc_ranks(ecc_root: Path, cases: list[dict]) -> list[list[str]]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ecc-root", default=str(Path.home() / "ECC"))
+    ap.add_argument("--ecc-root", default=str(ROOT / "vendor" / "ecc"),
+                    help="catalogue à mesurer (défaut : la base vendue)")
     args = ap.parse_args()
     ecc_root = Path(args.ecc_root).expanduser()
 

@@ -10,7 +10,9 @@ const fs = require('fs');
 const path = require('path');
 
 const file = process.argv[2];
-const repoRoot = path.resolve(process.argv[3] || path.join(__dirname, '..', '..', 'ECC'));
+// default: the base vendored into this repository, so the harness works
+// without an external ~/ECC checkout.
+const repoRoot = path.resolve(process.argv[3] || path.join(__dirname, '..', 'vendor', 'ecc'));
 if (!file) { console.error('usage: node tools/ecc_router_bench.js QUERIES.jsonl [ECC_ROOT]'); process.exit(2); }
 if (!fs.existsSync(path.join(repoRoot, 'scripts', 'lib', 'context-selection.js'))) {
   console.error(`pas de routeur ECC sous ${repoRoot} — ./tools/fetch_ecc.sh d'abord`);

@@ -70,7 +70,8 @@ def mcnemar(a: list[bool], b: list[bool]) -> tuple[int, int, float]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ecc-root", default=str(Path.home() / "ECC"))
+    ap.add_argument("--ecc-root", default=str(ROOT / "vendor" / "ecc"),
+                    help="catalogue à mesurer (défaut : la base vendue)")
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
 

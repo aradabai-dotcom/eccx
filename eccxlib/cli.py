@@ -264,7 +264,7 @@ def cmd_doctor(args) -> int:
     if (ECC_ROOT / "node_modules").is_dir():
         ok("node deps", "installed")
     else:
-        warn("node deps", "run: cd ~/ECC && npm install --ignore-scripts")
+        warn("node deps", f"run: cd {ECC_ROOT} && npm install --ignore-scripts (ou ./tools/vendor_bootstrap.sh)")
 
     idx = indexer.load_json_soft()
     if idx and idx.get("count"):
