@@ -375,27 +375,35 @@ Trois défauts structurels, eux, sont réels :
    précédemment était un artefact : le rappel ne bouge pas, seul le nombre de
    concurrents baisse. Corrigé et publié dans le document.
 
-## 10 sexies. 20 tâches de dev senior — et le français qui ne passe pas
+## 10 sexies. 20 tâches de dev senior — et le français, corrigé
 
 `docs/EVAL-SENIOR-DEV.md` + `evals/senior-dev.jsonl` : 20 requêtes qu'un senior
 tape vraiment (incident, migration à chaud, revue de PR, ADR, secret exposé…),
 dont **4 en français**. Les cibles ont été écrites avant de regarder les
 classements.
 
-| sous-ensemble | @1 | @20 (rappel) |
-|---|---|---|
-| 20 tâches, catalogue complet | **7/20 (35 %)** | 15/20 (75 %) |
-| 20 tâches, profil `logiciel@1` | **9/20 (45 %)** | 17/20 (85 %) |
-| **français seul** | **0/4 (0 %)** | 2/4 (50 %) |
+| sous-ensemble | @1 | @3 | @20 (rappel) |
+|---|---|---|---|
+| 20 tâches, catalogue complet | **9/20 (45 %)** | 11/20 | 16/20 (80 %) |
+| 20 tâches, profil `logiciel@1` | **11/20 (55 %)** | 12/20 | 18/20 (90 %) |
+| **français seul** | **2/4 (50 %)** | 3/4 | 3/4 |
+| français, avant le lexique | ~~0/4~~ | 1/4 | 2/4 |
+
+Le français est passé de 0 à 2 sur 4 au rang 1 grâce à `eccxlib/lexique.py`
+(135 mots, 35 locutions). Le défaut le plus coûteux n'était pourtant pas là :
+`WORD_RE` étant ASCII, `déploiement` se découpait en `ploiement` et
+`précédente` en `pr` + `dente` — et le fragment `pr` faisait gagner `review-pr`.
 
 Le profil de catalogue (`profils/logiciel@1.json`, `eccx --profil logiciel`)
 est une **vue réversible** : 90 skills hors génie logiciel ne sont plus chargées,
-aucun fichier n'est supprimé. Il vaut +2 au rang 1 sur ces tâches — et c'est un
-périmètre, pas une amélioration du routeur.
+aucun fichier n'est supprimé. +2 au rang 1 et +2 au rappel sur ces tâches — c'est
+un périmètre déclaré, pas une amélioration du routeur.
 
-Le défaut numéro un n'est pas le rang 1 : **c'est le français**. Le catalogue
-est anglais, le routeur n'a aucune capacité interlingue, et « mon déploiement de
-production a échoué » renvoie `review-pr`.
+Deux leviers ont été **mesurés puis laissés optionnels** :
+`--semantic-expansion` (co-occurrence PMI, net zéro sur trois jeux, et nuisible
+sur les requêtes de sécurité) et `--two-stage` (re-scoring sémantique conditionné,
++2 au rang 1 sur 80 requêtes mais p = 0,73). Détail et chiffres dans
+`docs/DEUXIEME-ETAGE.md`.
 
 ## 11. Limites assumées
 

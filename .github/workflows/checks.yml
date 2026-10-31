@@ -103,9 +103,15 @@ jobs:
 
   mutation-diff:
     # The per-change tier: only the modules the pull request touched, on a
-    # throwaway worktree, with its own cache. Measured at 63-99 s for a
-    # 453-mutant scope against ~90 min for 2 639 — the difference between a
-    # check people read and a check people mute.
+    # throwaway worktree, with its own cache.
+    #
+    # The budget is set from measurement, not from the old "63-99 s for 453
+    # mutants" figure, which was true for a one-module diff and became false
+    # the moment a PR touched util + router + indexer: that scope is 2 033
+    # mutants, and PR #9 reached 1 764 of them before the 15-minute wall
+    # cancelled it. A budget that is too short does not fail honestly — it
+    # produces `cancelled`, which reads as neither pass nor defect. 25 minutes
+    # leaves ~4 minutes of headroom at the observed rate (~2 mutants/s).
     #
     # Advisory on purpose. A partial score is not comparable with the global
     # floor (nothing has calibrated "what share of *these* mutants should
@@ -114,7 +120,7 @@ jobs:
     needs: checks
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     continue-on-error: true
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4

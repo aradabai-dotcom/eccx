@@ -358,24 +358,77 @@ def score_hybrid(index: dict, query: str, top: int = 8, *,
     return out
 
 
-def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
-          project_context: list[str] | None = None,
-          boost: dict[str, float] | None = None,
-          term_weights: dict[str, float] | None = None) -> list[dict]:
-    docs = [d for d in index["docs"] if not kinds or d["kind"] in kinds]
+_EXPANSION_CACHE: dict[tuple[int, int], dict] = {}
+
+
+def _expansion_table(index: dict) -> dict:
+    """Co-occurrence table, built once per index object.
+
+    Rebuilding it on every query would add ~40 ms to the latency the product is
+    sold on; the index is immutable between rebuilds, so the table is too.
+    """
+    key = (id(index), len(index["docs"]))
+    table = _EXPANSION_CACHE.get(key)
+    if table is None:
+        from . import expansion
+        table = expansion.build(index)
+        _EXPANSION_CACHE.clear()      # one index at a time; avoid unbounded growth
+        _EXPANSION_CACHE[key] = table
+    return table
+
+
+def prepare_terms(query: str, *, translate: bool = True,
+                  term_weights: dict[str, float] | None = None,
+                  semantic_expansion: bool = False,
+                  index: dict | None = None) -> tuple | None:
+    """The single place where a query becomes weighted terms.
+
+    Both stages must see the *same* query representation. They did not, once:
+    the second stage re-tokenised the raw string, so on French queries it judged
+    documents against words the first stage had never scored, and demoted a
+    correct answer. One function, called once.
+    """
+    if translate:
+        from . import lexique
+        query, _ = lexique.rewrite(query)
     base_tokens = tokenize(query)
     if not base_tokens:
-        return []
+        return None
     origin = expand_with_origin(base_tokens)
     if term_weights:
-        # Rocchio mode: the caller supplies weights (original terms = 1.0,
-        # expansion terms < 1.0). Synonyms are not re-applied on top.
         qtokens = list(term_weights)
         syn_weight = {t: term_weights[t] for t in qtokens}
     else:
         qtokens = list(origin)
         syn_weight = {t: (1.0 if t in origin and t in base_tokens else 0.55)
                       for t in qtokens}
+        if semantic_expansion and index is not None and index["docs"]:
+            from . import expansion
+            extra = expansion.expand(qtokens, _expansion_table(index))
+            for term, weight in extra.items():
+                if term not in syn_weight:
+                    qtokens.append(term)
+                    syn_weight[term] = weight
+    return query, base_tokens, origin, qtokens, syn_weight
+
+
+def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
+          project_context: list[str] | None = None,
+          boost: dict[str, float] | None = None,
+          term_weights: dict[str, float] | None = None,
+          translate: bool = True,
+          semantic_expansion: bool = False,
+          ) -> list[dict]:
+    docs = [d for d in index["docs"] if not kinds or d["kind"] in kinds]
+    # Translation happens inside prepare_terms: the catalogue is English-only,
+    # so a French query reaches it with terms it can never match
+    # (« déploiement » vs « deployment »). Measured before this existed: 0/4 on
+    # French senior-dev queries. English queries come back unchanged.
+    prepared = prepare_terms(query, translate=translate, term_weights=term_weights,
+                            semantic_expansion=semantic_expansion, index=index)
+    if not prepared:
+        return []
+    query, base_tokens, origin, qtokens, syn_weight = prepared
     primary = set(base_tokens)
     ctx = {stem(c) for c in (project_context or [])}
     allowed_ctx = ctx | primary
@@ -455,6 +508,9 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
                         "matched": sorted(matched), "coverage": round(cov, 2)})
 
     results.sort(key=lambda r: (-r["score"], r["doc"]["kind"], r["doc"]["id"]))
+    # Stage one ends here. A second stage composes on top of this result list
+    # (`second_stage.apply_gate`); it is deliberately not reachable from inside
+    # this function, so the lexical router stays a pure lexical router.
     return results[:top]
 
 

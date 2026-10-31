@@ -1,0 +1,16 @@
+{"q": "the payment service returns 500 since last night's release", "expect": ["skill:error-handling", "skill:deployment-patterns", "skill:production-audit"], "lang": "en"}
+{"q": "write down why we picked this queue so the team stops debating it", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions"], "lang": "en"}
+{"q": "unit tests take twenty minutes, I want them faster", "expect": ["skill:python-testing", "skill:tdd-workflow", "skill:e2e-testing"], "lang": "en"}
+{"q": "memory keeps growing until the process gets killed every hour", "expect": ["skill:error-handling", "skill:latency-critical-systems", "skill:production-audit"], "lang": "en"}
+{"q": "security review before we go live", "expect": ["skill:security-review", "skill:security-scan"], "lang": "en"}
+{"q": "we need to move to a new major version of the database", "expect": ["skill:database-migrations", "skill:postgres-patterns", "skill:mysql-patterns"], "lang": "en"}
+{"q": "the continuous integration job fails at the build step", "expect": ["skill:github-ops", "skill:delivery-gate", "skill:git-workflow"], "lang": "en"}
+{"q": "reduce the git repository that weighs several gigabytes", "expect": ["skill:repository-hygiene"], "lang": "en"}
+{"q": "a credential was pushed by mistake", "expect": ["skill:security-scan", "skill:pii-redaction", "skill:repository-hygiene"], "lang": "en"}
+{"q": "ten year old code, where do I start to add a feature", "expect": ["skill:codebase-onboarding", "skill:brownfield-retrospective", "skill:code-tour"], "lang": "en"}
+{"q": "an eight hundred line file nobody wants to modify", "expect": ["skill:large-file-decomposition"], "lang": "en"}
+{"q": "the API returns slowly under load", "expect": ["skill:latency-critical-systems", "skill:backend-patterns"], "lang": "en"}
+{"q": "how do I make sure two services do not process the same message twice", "expect": ["skill:error-handling", "skill:backend-patterns"], "lang": "en"}
+{"q": "our build is flaky on the CI machine but not on my laptop", "expect": ["skill:github-ops", "skill:e2e-testing", "skill:python-testing"], "lang": "en"}
+{"q": "I want a checklist before shipping a migration that touches millions of rows", "expect": ["skill:database-migrations", "skill:delivery-gate"], "lang": "en"}
+{"q": "review the pull request that changes the auth middleware", "expect": ["skill:security-review", "skill:verification-loop"], "lang": "en"}

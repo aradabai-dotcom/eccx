@@ -6,6 +6,7 @@ import fcntl
 import json
 import os
 import re
+import unicodedata
 import sys
 import time
 from pathlib import Path
@@ -107,9 +108,25 @@ def stem(word: str) -> str:
 
 
 def tokenize(text: str) -> list[str]:
-    """Lowercase word tokens, hyphen/dot split into parts as well as whole."""
+    """Lowercase word tokens, hyphen/dot split into parts as well as whole.
+
+    Accents are stripped before matching. The word regex is ASCII, so
+    "déploiement" used to be split into "ploiement" (the accented "é" ended the
+    match) and "précédente" into "pr" + "dente" — that stray "pr" scored 5.0
+    against `review-pr`'s name and made it win on French deployment questions.
+    Folding first is the fix; it is also what makes "café" and "cafe" the same
+    token on both sides of the index.
+    """
+    text = unicodedata.normalize("NFD", text.lower())
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
     out: list[str] = []
-    for raw in WORD_RE.findall(text.lower()):
+    for raw in WORD_RE.findall(text):
+        # The regex allows `.` and `-` inside a token for filenames
+        # (package.json), but it also swallowed sentence-final punctuation:
+        # "pipeline." became its own token and the co-occurrence table filled
+        # with `pipeline.`, `rollback.`, `release.` — associations that look
+        # real and match nothing. Strip the edges, keep the middle.
+        raw = raw.strip(".-_+/")
         if len(raw) < 2:
             continue
         if raw in STOP:
