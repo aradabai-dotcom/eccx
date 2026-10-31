@@ -178,6 +178,13 @@ echo
 # vocabulary at all, is invisible in the router and looks like coverage. The
 # audit is the only thing that sees it.
 echo
+# Eval seals: editing a measurement set without re-sealing loosens a gate
+# silently. The digests are committed, so the change shows up in review.
+echo
+echo "== eval seals (measurement sets unchanged since sealing) =="
+python3 tools/eval_health.py --seal
+seal_rc=$?
+
 echo "== alias registry (valid, effective, reachable) =="
 python3 tools/alias_audit.py --quiet
 alias_rc=$?
@@ -207,5 +214,5 @@ if [ "${lint_rc:-1}" -eq 0 ] && [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $b
   echo "  python3 perf/budgets.py   perf budgets (~30 s, timing-sensitive)"
   exit 0
 fi
-echo "FAILURES (lint=${lint_rc:-1} alias=$alias_rc tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
+echo "FAILURES (lint=${lint_rc:-1} seal=$seal_rc alias=$alias_rc tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
 exit 1
