@@ -405,6 +405,29 @@ sur les requêtes de sécurité) et `--two-stage` (re-scoring sémantique condit
 +2 au rang 1 sur 80 requêtes mais p = 0,73). Détail et chiffres dans
 `docs/DEUXIEME-ETAGE.md`.
 
+## 10 septies. Alias : le trou de vocabulaire se corrige avec du contenu
+
+`latency-critical-systems` ne contient **aucune occurrence** du mot « endpoint ».
+Aucun réglage de poids ne fait gagner un document qui ne partage aucun terme avec
+la question. La correction est d'ajouter du vocabulaire au document — pas dans
+`vendor/ecc/` (base vendue, resynchronisable), mais dans un registre versionné :
+`aliases/catalogue.json`.
+
+| | |
+|---|---|
+| champ indexé | `alias`, poids **1,2** (sous la description 1,8 : une affirmation vaut moins qu'une déclaration) |
+| registre | 12 fiches, 28 termes, chacun avec son `why` |
+| contrôle | `python3 tools/alias_audit.py` — validité, effet, atteignabilité |
+
+Effet mesuré sur cinq jeux : **+1 au rang 1 et +2 au rappel** sur les 20 tâches
+de dev senior, **+1 au rang 3** sur l'anglais scellé, **aucune perte** ailleurs.
+Le gain est concentré sur le jeu qui a servi à écrire le contenu : c'est de
+l'ajustement, pas une amélioration générale, et `docs/ALIASES.md` le dit.
+
+Deux chiffres qui valent plus que le gain : l'audit a rejeté **13 des 43 premiers
+termes** (déjà présents dans les titres, donc sans effet) et l'ablation montre que
+**3 entrées sur 13** déplacent quoi que ce soit.
+
 ## 11. Limites assumées
 
 1. **Pas de subagents parallèles** — contrainte du runtime, pas un choix.

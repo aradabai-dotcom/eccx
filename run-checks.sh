@@ -174,6 +174,14 @@ sealed9b_rc=$?
 # ECC index while writing into the corpus state directory. A CLI-level smoke
 # test on a throwaway directory is the only thing that sees the whole path.
 echo
+# Alias registry: an entry that points at a renamed document, or that adds no
+# vocabulary at all, is invisible in the router and looks like coverage. The
+# audit is the only thing that sees it.
+echo
+echo "== alias registry (valid, effective, reachable) =="
+python3 tools/alias_audit.py --quiet
+alias_rc=$?
+
 echo "== routing over a user corpus (build, recall, eval) =="
 python3 tools/corpus_smoke.py
 corpus_rc=$?
@@ -199,5 +207,5 @@ if [ "${lint_rc:-1}" -eq 0 ] && [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $b
   echo "  python3 perf/budgets.py   perf budgets (~30 s, timing-sensitive)"
   exit 0
 fi
-echo "FAILURES (lint=${lint_rc:-1} tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
+echo "FAILURES (lint=${lint_rc:-1} alias=$alias_rc tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
 exit 1

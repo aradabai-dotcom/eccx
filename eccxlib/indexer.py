@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 from . import frontmatter as fm
+from .aliases import apply as apply_aliases, from_frontmatter as aliases_from
 from .util import (ADAPTER_ROOT, ADAPTER_STATE, ECC_ROOT, est_tokens, load_json,
                    read_text, save_json, tokenize)
 
@@ -75,6 +76,7 @@ def _doc(kind: str, cid: str, path: Path, root: Path, extra: dict | None = None)
         "headings": heads,
         "body_tokens": est_tokens(body),
         "sections": sections,
+        "aliases_fm": aliases_from(meta),
         "extra": extra or {},
     }
 
@@ -171,6 +173,7 @@ def build(root: Path = ECC_ROOT) -> dict:
         "count_local": sum(1 for d in docs if d["extra"].get("origin") == "local"),
         "docs": docs,
     }
+    apply_aliases(docs)
     save_json(INDEX_PATH, index)
     return index
 
@@ -191,6 +194,10 @@ def load(force: bool = False) -> dict:
     if not force:
         data = load_json(INDEX_PATH, None)
         if _usable(data):
+            # Applied at load, not baked into the index: editing the registry
+            # must take effect without a re-index, and a stale copy must never
+            # outlive the file it came from. `apply` overwrites, never merges.
+            apply_aliases(data["docs"])
             return data
     return build()
 
