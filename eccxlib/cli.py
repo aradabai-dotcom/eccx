@@ -538,7 +538,7 @@ def cmd_search(args) -> int:
         from . import expand as ex
         tw = ex.build_terms(idx, args.query)["weights"]
     results = router.score(idx, args.query, kinds=kinds, top=args.k,
-                           boost=router.load_boost(), term_weights=tw)
+                           boost=router.load_boost(), term_weights=tw, **lex)
     if not results:
         print("no match")
         return 0

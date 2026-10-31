@@ -17,6 +17,23 @@ if ! python3 -c "import coverage" >/dev/null 2>&1; then
   pip install --quiet coverage >/dev/null 2>&1 || true
 fi
 
+# Ruff was missing from this gate until PR #9: the local run said "everything
+# green" while CI failed on `ruff check eccxlib tools --select F,E9,B`. Six real
+# defects had shipped in a green-looking tree — including three duplicated dict
+# keys in the French lexicon (F601), where the duplicate silently discarded a
+# translation. A gate that does not run the same check as CI is not a gate.
+if ! python3 -c "import ruff" >/dev/null 2>&1 && ! python3 -m ruff --version >/dev/null 2>&1; then
+  echo "[run-checks] installing ruff (not persisted between sessions)…"
+  pip install --quiet ruff >/dev/null 2>&1 || true
+fi
+echo "== lint (same selection as CI) =="
+if python3 -m ruff check eccxlib tools --select F,E9,B; then
+  lint_rc=0
+else
+  lint_rc=1
+fi
+echo
+
 echo "== unit tests =="
 if python3 -c "import coverage" >/dev/null 2>&1; then
   COVERAGE_PROCESS_START="$PWD/.coveragerc" \
@@ -167,7 +184,7 @@ python3 tools/budget_smoke.py
 budget_rc=$?
 
 echo
-if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $base_diff_rc -eq 0 ] \
+if [ "${lint_rc:-1}" -eq 0 ] && [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $base_diff_rc -eq 0 ] \
    && [ $gaps_rc -eq 0 ] && [ $conf_rc -eq 0 ] && [ $audit_rc -eq 0 ] \
    && [ $eval_rc -eq 0 ] && [ $heldout_rc -eq 0 ] && [ $shortlist_rc -eq 0 ] \
    && [ $sealed1_rc -eq 0 ] && [ $sealed20_rc -eq 0 ] && [ $sealed8_rc -eq 0 ] \
@@ -182,5 +199,5 @@ if [ $tests_rc -eq 0 ] && [ $cov_rc -eq 0 ] && [ $base_diff_rc -eq 0 ] \
   echo "  python3 perf/budgets.py   perf budgets (~30 s, timing-sensitive)"
   exit 0
 fi
-echo "FAILURES (tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
+echo "FAILURES (lint=${lint_rc:-1} tests=$tests_rc coverage=$cov_rc base=$base_diff_rc gaps=$gaps_rc conformity=$conf_rc audit=$audit_rc eval=$eval_rc heldout=$heldout_rc shortlist=$shortlist_rc budget=$budget_rc)"
 exit 1

@@ -86,12 +86,9 @@ WORDS: dict[str, str] = {
     "deployes": "deploy",
     "deployee": "deploy",
     "deployees": "deploy",
-    "deploiement": "deployment deploy",
-    "deploiement": "deployment deploy",
 
     "livraison": "delivery release",
     "livrer": "ship release",
-    "panne": "outage failure incident",
     "panne": "outage failure incident",
 
     "coupure": "outage downtime",
@@ -114,7 +111,6 @@ WORDS: dict[str, str] = {
     "repli": "rollback failover",
     "supervision": "monitoring",
     "surveillance": "monitoring watch",
-    "alerte": "alert",
     "alerte": "alert",
     "journal": "log",
     "journalisation": "logging",

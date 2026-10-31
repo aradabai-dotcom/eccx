@@ -430,10 +430,6 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
         return []
     query, base_tokens, origin, qtokens, syn_weight = prepared
     primary = set(base_tokens)
-    # Snapshot for the second stage: it must judge candidates on the same terms
-    # the first stage scored them with, not on a re-tokenisation of the raw
-    # query (that mismatch demoted correct French answers).
-    stage_tokens = dict(syn_weight)
     ctx = {stem(c) for c in (project_context or [])}
     allowed_ctx = ctx | primary
 
