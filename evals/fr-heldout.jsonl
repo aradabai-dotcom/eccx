@@ -1,0 +1,12 @@
+{"q": "le service de paiement renvoie des erreurs 500 depuis la mise en production", "expect": ["skill:error-handling", "skill:backend-patterns", "skill:deployment-patterns"], "lang": "fr"}
+{"q": "comment documenter une décision d'architecture pour que l'équipe arrête d'en débattre", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions"], "lang": "fr"}
+{"q": "les tests unitaires prennent vingt minutes, je veux les accélérer", "expect": ["skill:python-testing", "skill:tdd-workflow", "skill:e2e-testing"], "lang": "fr"}
+{"q": "une fuite de mémoire en production, le processus est tué toutes les heures", "expect": ["skill:error-handling", "skill:latency-critical-systems", "skill:production-audit"], "lang": "fr"}
+{"q": "revue de sécurité avant la mise en production", "expect": ["skill:security-review", "skill:security-scan"], "lang": "fr"}
+{"q": "je dois migrer la base de données vers une nouvelle version majeure", "expect": ["skill:database-migrations", "skill:postgres-patterns", "skill:mysql-patterns"], "lang": "fr"}
+{"q": "le pipeline d'intégration continue échoue sur l'étape de compilation", "expect": ["skill:github-ops", "skill:delivery-gate", "skill:git-workflow"], "lang": "fr"}
+{"q": "écrire un document qui justifie le choix de la file d'attente", "expect": ["skill:architecture-decision-records", "skill:context-and-decisions"], "lang": "fr"}
+{"q": "réduire la taille du dépôt git qui pèse plusieurs gigaoctets", "expect": ["skill:repository-hygiene"], "lang": "fr"}
+{"q": "un mot de passe a été poussé par erreur dans le dépôt", "expect": ["skill:security-scan", "skill:pii-redaction", "skill:repository-hygiene"], "lang": "fr"}
+{"q": "du code legacy vieux de dix ans, par où commencer pour ajouter une fonctionnalité", "expect": ["skill:codebase-onboarding", "skill:brownfield-retrospective", "skill:code-tour"], "lang": "fr"}
+{"q": "un fichier de huit cents lignes que personne n'ose modifier", "expect": ["skill:large-file-decomposition"], "lang": "fr"}

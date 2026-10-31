@@ -364,16 +364,30 @@ def cmd_recall(args) -> int:
     ctx = _context_for(project)
     kinds = args.kind.split(",") if getattr(args, "kind", None) else None
     tw = None
+    lex = {"semantic_expansion": bool(getattr(args, "semantic_expansion", False))}
     if getattr(args, "expand", False):
         from . import expand as ex
         tw = ex.build_terms(idx, args.query)["weights"]
     pool = max(args.k, 15) if getattr(args, "rerank", False) else args.k
-    if getattr(args, "semantic", False):
+    if getattr(args, "two_stage", False) and getattr(args, "semantic", False):
+        from . import second_stage
+        allv, qv = _semantic(idx, args.query)
+        results = router.score(idx, args.query, kinds=kinds, top=max(pool, 20),
+                               project_context=ctx, boost=router.load_boost(),
+                               term_weights=tw, **lex)
+        if allv is not None and qv is not None:
+            # Only reached when the lexical stage is unsure (see second_stage):
+            # a confident top-1 never pays for the model.
+            row_of = {f"{d['kind']}:{d['id']}": i for i, d in enumerate(idx["docs"])}
+            results, _escalated = second_stage.apply_gate(
+                results, qv, allv["docs"], row_of)
+        results = results[:pool]
+    elif getattr(args, "semantic", False):
         allv, qv = _semantic(idx, args.query)
         if allv is None:
             results = router.score(idx, args.query, kinds=kinds, top=pool,
                                    project_context=ctx, boost=router.load_boost(),
-                                   term_weights=tw)
+                                   term_weights=tw, **lex)
         else:
             results = router.score_hybrid(idx, args.query, top=pool,
                                           vector_matrix=allv["docs"],
@@ -386,7 +400,7 @@ def cmd_recall(args) -> int:
     else:
         results = router.score(idx, args.query, kinds=kinds, top=pool,
                                project_context=ctx, boost=router.load_boost(),
-                               term_weights=tw)
+                               term_weights=tw, **lex)
     if getattr(args, "rerank", False):
         from . import rerank as rr
         results, used = rr.reranked_results(args.query, results)
@@ -519,6 +533,7 @@ def cmd_search(args) -> int:
     idx = _index(args)
     kinds = args.kind.split(",") if args.kind else None
     tw = None
+    lex = {"semantic_expansion": bool(getattr(args, "semantic_expansion", False))}
     if getattr(args, "expand", False):
         from . import expand as ex
         tw = ex.build_terms(idx, args.query)["weights"]
@@ -1396,7 +1411,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-semantic", dest="semantic", action="store_false",
                    help="pure lexical routing (~690 ms faster, ~5 points worse @1 "
                         "on held-out)")
-    s.set_defaults(func=cmd_recall)
+    s.add_argument("--two-stage", dest="two_stage", action="store_true",
+                   help="semantic re-scoring, only when the lexical top-1 is "
+                        "uncertain (measured +4/-1 @3, p=0.38; opt-in)")
+    s.add_argument("--semantic-expansion", dest="semantic_expansion",
+                   action="store_true",
+                   help="add catalogue co-occurrence terms to the query "
+                        "(measured neutral across three sets; opt-in)")
+    s.set_defaults(func=cmd_recall, two_stage=False, semantic_expansion=False)
 
     s = sub.add_parser("context", help="alias of recall with a smaller default budget")
     s.add_argument("query")

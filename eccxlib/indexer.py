@@ -23,7 +23,10 @@ from .util import (ADAPTER_ROOT, ADAPTER_STATE, ECC_ROOT, est_tokens, load_json,
 
 INDEX_PATH = ADAPTER_STATE / "index.json"
 OVERLAY = ADAPTER_ROOT / "skills-local"
-INDEX_VERSION = 8  # bump whenever tokenisation, paths or section splitting change
+INDEX_VERSION = 9  # bump whenever tokenisation, paths or section splitting change
+# 9: `tokenize` folds accents (NFD) and strips edge punctuation. Both change
+#    every token in the index; leaving the version at 8 paired a stale index
+#    with a new tokeniser and broke two routing tests that passed at HEAD.
 MAX_KWS = 16
 
 H2 = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
