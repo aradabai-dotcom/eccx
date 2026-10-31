@@ -96,7 +96,7 @@ ALIASES = {stem(k): [x for x in (stem(v) for v in vs) if x != stem(k)]
 # queries in each direction, +0.0 points net, bootstrap CI [-5.3, +5.3]. A
 # plausible idea that does not survive measurement is a rejected idea, not a
 # pending one. Re-measure only if the catalogue grows or the tokeniser changes.
-FIELD_WEIGHT = {"name": 5.0, "desc": 1.8, "heads": 0.55, "extra": 0.4,
+FIELD_WEIGHT = {"name": 5.0, "desc": 1.8, "alias": 1.2, "heads": 0.55, "extra": 0.4,
                 # Section bodies, only for an indexed directory the user owns.
                 # ECC components carry a hand-written `description` that
                 # summarises the whole file, so the body adds nothing but noise
@@ -201,6 +201,11 @@ def _fields(doc: dict) -> dict[str, list[str]]:
         "name": set(name_seq),
         "name_seq": name_seq,
         "desc": set(tokenize(doc.get("desc") or "")),
+        # Alias = the wording a user brings, not the catalogue's own. Weighted
+        # below the description (1.8) on purpose: an alias is a claim that a
+        # document is *about* something, and a claim is worth less than the
+        # document saying it itself.
+        "alias": set(tokenize(" ".join(doc.get("aliases") or []))),
         "heads": set(tokenize(" ".join(doc.get("headings") or []))),
         "extra": set(tokenize(" ".join(str(v) for v in (doc.get("extra") or {}).values()))),
         "sec": set(),
@@ -442,7 +447,7 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
         # idf and changes rankings silently — measured at 4.6 points of
         # recall@1 on one set when the body field was tried. `extra` is
         # deliberately out of `df`: it is metadata, not vocabulary.
-        df_fields = [k for k in ("name", "desc", "heads", "sec")
+        df_fields = [k for k in ("name", "desc", "alias", "heads", "sec")
                      if FIELD_WEIGHT.get(k, 0)]
         df[t] = sum(1 for f in fields
                     if any(t in f[k] for k in df_fields))
@@ -459,6 +464,8 @@ def score(index: dict, query: str, kinds: list[str] | None = None, top: int = 8,
                 hit += FIELD_WEIGHT["name"]
             if t in f["desc"]:
                 hit += FIELD_WEIGHT["desc"]
+            if t in f["alias"]:
+                hit += FIELD_WEIGHT["alias"]
             if t in f["heads"]:
                 hit += FIELD_WEIGHT["heads"]
             if t in f["extra"]:

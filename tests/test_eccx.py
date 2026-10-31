@@ -4025,8 +4025,8 @@ class TestScoringIsPinned(unittest.TestCase):
         section_field` holds that boundary.
         """
         self.assertEqual(router.FIELD_WEIGHT,
-                         {"name": 5.0, "desc": 1.8, "heads": 0.55, "extra": 0.4,
-                          "sec": 1.8})
+                         {"name": 5.0, "desc": 1.8, "alias": 1.2, "heads": 0.55,
+                          "extra": 0.4, "sec": 1.8})
 
     def test_the_catalogue_does_not_get_the_section_field(self):
         """ECC documents must score exactly as before: `sec` stays empty."""

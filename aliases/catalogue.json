@@ -1,0 +1,107 @@
+{
+  "_readme": [
+    "Alias overlay : pour chaque fiche, les mots qu'un développeur tape pour la",
+    "décrire, en dehors du vocabulaire de la fiche. Une entrée = un humain qui",
+    "répond à la question « comment appellerait-on ceci autrement ? », pas une",
+    "extension automatique.",
+    "",
+    "Sélection : les documents demandés au moins deux fois et ratés au moins deux",
+    "fois dans les jeux de mesure (règle posée avant de regarder quelles requêtes",
+    "échouaient précisément). Un alias par fiche qui ne change rien est refusé par",
+    "tools/alias_audit.py.",
+    "",
+    "Ce fichier ne touche PAS vendor/ecc : la base vendue est resynchronisable, et",
+    "604 fichiers modifiés seraient un diff illisible perdu au prochain sync.",
+    "Voir docs/ALIASES.md."
+  ],
+  "entries": {
+    "skill:latency-critical-systems": {
+      "why": "La fiche décrit p50/p95/p99, les caches et les chemins critiques ; elle ne dit nulle part le mot que l'utilisateur emploie pour le symptôme (« mon endpoint met 4 secondes »). Zéro occurrence de « endpoint » dans tout le fichier.",
+      "terms": [
+        "endpoint",
+        "response time",
+        "slow request"
+      ]
+    },
+    "skill:error-handling": {
+      "why": "Traite les retries, les disjoncteurs et les doublons de facturation, sans jamais nommer ni le doublon ni l'idempotence.",
+      "terms": [
+        "double charge",
+        "charged twice",
+        "idempotency",
+        "network timeout"
+      ]
+    },
+    "skill:python-testing": {
+      "why": "La fiche parle de pytest, de fixtures et de couverture ; l'utilisateur qui décrit un test instable dit « il passe en local ».",
+      "terms": [
+        "flaky test",
+        "passes locally",
+        "intermittent failure"
+      ]
+    },
+    "skill:postgres-patterns": {
+      "why": "Décrit l'optimisation de requêtes et l'indexation, mais ne dit jamais « SQL » — le nom du langage que tout le monde tape.",
+      "terms": [
+        "sql"
+      ]
+    },
+    "skill:backend-patterns": {
+      "why": "Parle de routes API Node/Express/Next.js ; le vocabulaire courant du serveur (« REST », « handler HTTP ») n'y figure pas.",
+      "terms": [
+        "rest api",
+        "api endpoint",
+        "http handler"
+      ]
+    },
+    "skill:verification-loop": {
+      "why": "Six phases de vérification avant une PR, sous un nom qui décrit le mécanisme (« loop ») et non l'intention (« est-ce prêt à fusionner ? »).",
+      "terms": [
+        "ready to merge"
+      ]
+    },
+    "skill:git-workflow": {
+      "why": "Couvre les conflits de fusion et la mise au propre des commits ; le nom ne les évoque pas, et « rebase » est déjà dans la description donc inutile en alias.",
+      "terms": [
+        "squash commits",
+        "branch has diverged"
+      ]
+    },
+    "skill:code-tour": {
+      "why": "La fiche nomme le format (CodeTour, fichiers .tour) ; celui qui demande une visite guidée ne connaît pas ce format.",
+      "terms": [
+        "walk me through",
+        "guided tour"
+      ]
+    },
+    "skill:security-review": {
+      "why": "Liste « authentication, user input, API endpoints, payment » mais ne nomme pas les attaques concrètes qu'on cherche quand on demande une revue de sécurité.",
+      "terms": [
+        "auth bypass",
+        "security audit",
+        "vulnerability"
+      ]
+    },
+    "skill:agent-security-hardening": {
+      "why": "Parle de contenu non fiable, d'identifiants d'exécution et de locataires ; l'attaque réelle s'appelle « prompt injection » et n'est pas nommée.",
+      "terms": [
+        "prompt injection",
+        "sandbox",
+        "tool permissions"
+      ]
+    },
+    "skill:codebase-onboarding": {
+      "why": "Décrit l'analyse d'une base inconnue pour produire un guide ; l'utilisateur dit « je viens d'arriver » et « où est quoi ».",
+      "terms": [
+        "where everything lives"
+      ]
+    },
+    "skill:coding-standards": {
+      "why": "Conventions de nommage et de lisibilité ; on les demande en disant « style » ou « règles de lint », deux mots absents de la fiche.",
+      "terms": [
+        "style guide",
+        "linter rules"
+      ]
+    }
+  }
+}
