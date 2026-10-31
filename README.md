@@ -428,6 +428,36 @@ Deux chiffres qui valent plus que le gain : l'audit a rejeté **13 des 43 premie
 termes** (déjà présents dans les titres, donc sans effet) et l'ablation montre que
 **3 entrées sur 13** déplacent quoi que ce soit.
 
+## 10 octies. Deux chiffres au lieu d'un : le thermomètre
+
+Un « 45 % au rang 1 » mélange deux problèmes distincts. `eccxlib/diagnose.py`
+classe chaque requête **avant** de la mesurer :
+
+| statut | n (sur 108) | se corrige avec |
+|---|---|---|
+| cible inexistante | 0 | le jeu d'éval |
+| **inatteignable** (aucun token commun) | **9 (8,3 %)** | du vocabulaire |
+| atteignable | 99 (91,7 %) | du classement |
+
+Et la courbe, qui est la vraie mesure :
+
+| tokens partagés | n | réussite @1 |
+|---|---|---|
+| 1 | 25 | 12 % |
+| 2 | 43 | 30 % |
+| 3 | 16 | 50 % |
+| 4+ | 15 | **93 %** |
+
+Trois lectures que je n'aurais pas eues avec un chiffre unique : un token commun
+ne rend pas une requête gagnable ; quand le routeur a du signal il réussit à
+93 % ; et **le déficit est dans la minceur du recouvrement**, pas dans le
+classement — 68 requêtes sur 99 partagent deux tokens ou moins.
+
+Les 12 jeux de mesure sont scellés par empreinte (`evals/SEALS.json`) : les
+modifier sans resceller casse la suite. `python3 tools/eval_health.py` affiche le
+rapport complet, `--unreachable` la liste avec les documents qui, eux, partagent
+des termes.
+
 ## 11. Limites assumées
 
 1. **Pas de subagents parallèles** — contrainte du runtime, pas un choix.

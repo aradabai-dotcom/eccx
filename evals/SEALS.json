@@ -1,0 +1,14 @@
+{
+  "evals/en-heldout.jsonl": "8eaf89f829d63fce79f7b256ad5a48c0bde0f6f893f78a7d31b51fda221d7f8b",
+  "evals/fr-heldout.jsonl": "e0983531d68391070f63e60a802336187892ff0b560415c04b5d7a7ad490d57b",
+  "evals/heldout.jsonl": "9c3f153970f84525a18f5c5f5c130ade7c27a083bc8ae29411ac1b3b528d8da3",
+  "evals/heldout2.jsonl": "3dbb50f5bf66a9de2c6be008090411e458afc2c091b11eddc61470436fc48052",
+  "evals/heldout3.jsonl": "28aa0b1db3391cb2d11a752496e3ea619d37b450477ca42e93036b0a0111687b",
+  "evals/heldout4.jsonl": "db7d9dd7d72c3b879fc6964d4b8cdcf7879e6bd9df237f21ae86fccbde036dab",
+  "evals/heldout5.jsonl": "b6cfe690e8c27811ebf1d71d2f0d7020c7abea8f7e68ac5d61fd11fcb1fd54d9",
+  "evals/heldout6.jsonl": "9dd374fe2cb85d8aa6dc558374c3fab2edb3d9b172a50cc8cd3cbe30dd4e4503",
+  "evals/heldout7.jsonl": "ef6c232ae58e783c986723d906da324b00a9a64534060cb077d6ad0a5808e50a",
+  "evals/heldout8.jsonl": "9529342740c179abae5c4f8b67e86978f8943ccc67a810de982ed5c669252183",
+  "evals/heldout9.jsonl": "c4a3c57598940f76edc1ed597b85fe0cc453f8d7b08fbc9d00d777886bd4f1ce",
+  "evals/senior-dev.jsonl": "498f72ef998f8364b2e82ab2b884181fa963304770387339cd71d69ada854f1b"
+}

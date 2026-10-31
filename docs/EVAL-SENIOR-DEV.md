@@ -137,32 +137,90 @@ des onze documents attendus ne sont même pas dans les 20 premiers, parce que
 
 ---
 
-## Les causes d'échec restantes
+## Le thermomètre était faux — voici le bon
 
-### 1. Le trou de vocabulaire — la vraie cause
+Pendant trois chantiers j'ai répété un chiffre unique : « 9/20 au rang 1 »,
+« 0/4 en français », « 45 % ». Ce chiffre mélangeait deux problèmes qui n'ont
+pas la même solution et ne se corrigent pas par les mêmes moyens. Pire : il
+m'a fait tirer une **conclusion fausse**.
 
-`latency-critical-systems` ne contient nulle part « endpoint ». `github-ops` ne
-contient pas « pipeline ». `security-scan` ne contient pas « committed key ».
-**Aucun réordonnancement ne fait gagner un document qui ne partage aucun terme
-avec la requête.** C'est la raison pour laquelle l'étage 2 ne peut pas payer :
-le plafond du réordonnancement est à 85 %, et les 40 points qui manquent ne
-sont pas dans la liste.
+### Ce que le diagnostic sépare
 
-### 2. Un mot courant dans un nom bat un sens dans une description
+`eccxlib/diagnose.py` classe chaque requête avant de la mesurer :
 
-| requête | ce que le routeur renvoie | pourquoi |
+| statut | sens | se corrige avec |
 |---|---|---|
-| this **endpoint** takes 4 **seconds**… | `scientific-db-pubmed-database` | « database » est dans le nom |
-| the retry logic double **charges**… | `customs-trade-compliance` | « charges » (frais) est dans le nom |
-| our **CI pipeline** fails… | `opensource-pipeline` | « pipeline » est dans le nom |
+| `missing` | une cible attendue n'existe pas | le jeu d'éval |
+| `unreachable` | aucune cible ne partage **un seul** token avec la question | du vocabulaire (alias, lexique) |
+| `reachable` | au moins un token commun | du classement |
 
-J'ai cru que le poids du nom (5,0) était le coupable. **Balayé de 2,5 à 5,0 : le
-poids actuel est déjà l'optimum**, 5,0 donnant 9/11/17 contre 8/11/11 à 2,5. Le
-nom domine parce qu'il est un signal fort, pas parce qu'il est surpondéré.
-La piste « baisser le poids du nom » est donc morte ; il faut donner au
-document pertinent les mots qui lui manquent.
+### Le résultat, et il contredit ce que j'avais annoncé
 
----
+| | valeur |
+|---|---|
+| couverture (au moins 1 token commun) | **99/108 = 91,7 %** |
+| dont requêtes à recouvrement **mince** (1–2 tokens) | 68 |
+| dont requêtes à **signal réel** (≥ 4 tokens) | 15 |
+
+J'ai annoncé « 18 % des requêtes structurellement inatteignables ». C'était
+**faux** : c'était 8,3 %, et ce chiffre venait d'un instrument plus grossier
+(nom + description seulement, sans la traduction du lexique ni les alias) que
+j'avais improvisé pour l'occasion. Un instrument improvisé produit un chiffre
+improvisé.
+
+### La courbe, et c'est elle qui tranche
+
+Réussite au rang 1 selon le nombre de tokens partagés avec la meilleure cible,
+sur les 99 requêtes atteignables :
+
+| tokens partagés | n | réussite @1 |
+|---|---|---|
+| 1 | 25 | **12 %** |
+| 2 | 43 | 30 % |
+| 3 | 16 | 50 % |
+| 4 | 7 | 86 % |
+| 5+ | 8 | **100 %** |
+
+Trois conséquences, et la troisième annule ma conclusion précédente.
+
+1. **« Atteignable » ne veut pas dire « gagnable ».** Un token commun donne 12 %
+   de réussite : c'est du bruit. La couverture à 91,7 % est donc une borne haute
+   optimiste, et l'honnêteté exige de la publier avec sa courbe, jamais seule.
+2. **Quand le routeur a un vrai signal, il fonctionne** : 93 % de réussite à
+   partir de 4 tokens partagés (14/15). Ce n'est pas un routeur cassé.
+3. **J'avais annoncé l'inverse.** J'ai écrit *« ce n'est pas un problème de
+   classement, c'est un problème de vocabulaire »*. La courbe dit : le classement
+   est solide là où il a de la matière ; **le déficit est dans la minceur du
+   recouvrement** — 68 requêtes sur 99 partagent deux tokens ou moins. Ce n'est
+   ni « le vocabulaire manque totalement » (8,3 %) ni « le classement est
+   mauvais » : c'est que le catalogue parle une langue voisine de celle des
+   utilisateurs, et deux mots communs ne suffisent pas.
+
+### Ce que ça change pour la suite
+
+L'objectif mesurable n'est plus « ajouter des alias » mais **faire passer les
+requêtes de la bande 1–2 tokens vers ≥ 3**. Un alias utile est donc un alias qui
+ajoute *plusieurs* termes d'une même question, pas un terme isolé. C'est une
+cible vérifiable, et elle explique pourquoi le registre actuel (28 termes sur 12
+fiches) déplace si peu : il ajoute un mot là où il en faudrait trois.
+
+### Le thermomètre est scellé
+
+`evals/SEALS.json` porte l'empreinte SHA-256 des 12 jeux de mesure. Modifier un
+jeu sans le resceller fait échouer la suite et la CI. Resceller laisse une trace
+dans le diff, relue par quelqu'un.
+
+**Ce que le sceau ne fait pas** : il ne répare rien du passé. `fr-heldout` et
+`en-heldout` ont été lus avant la fin du développement qu'ils devaient mesurer ;
+aucune empreinte ne corrige ça. Il empêche la prochaine modification silencieuse,
+et c'est tout ce qu'un sceau peut promettre.
+
+Pourquoi je n'ai pas écrit un nouveau jeu « aveugle » : j'inventerais encore les
+requêtes, à partir du même catalogue, et je serais toujours la personne qui écrit
+la question et la réponse. Un jeu écrit par moi ne sera jamais indépendant de
+moi. La vraie sortie de ce problème est la donnée d'usage réelle — et le dépôt
+n'en a aucune : les 76 lignes de `.eccx/` sont des fixtures de test
+(`"title": "fallback title"`).
 
 ## Ce qu'un senior ferait ensuite, par ordre de rentabilité
 
